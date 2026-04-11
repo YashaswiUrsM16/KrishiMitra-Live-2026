@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Farming Calendar | CropSense AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.cal-container { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.title-box h1 { font-size: 2.2rem; color: #0a2e1a; font-weight: 800; }
+.title-box p { color: #52796f; font-size: 1rem; }
+
+.gen-box { background: white; padding: 2rem; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); margin-bottom: 2rem; display:flex; gap:15px; align-items:flex-end;}
+.form-group { flex: 1; }
+.form-group label { display: block; font-weight: 700; color: #1b4332; margin-bottom: 8px; }
+.form-group input, .form-group select { width: 100%; padding: 12px; border: 2px solid #e8f5e9; border-radius: 10px; font-size: 1rem; }
+.gen-btn { background: #2d6a4f; color: white; border: none; padding: 14px 28px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s; height: fit-content; }
+.gen-btn:hover { background: #1b4332; }
+
+.timeline { display: flex; flex-direction: column; gap: 1rem; }
+.task-card { background: white; border-radius: 12px; padding: 1.5rem; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-left: 5px solid #74c69d; transition:0.3s;}
+.task-card:hover { transform: translateX(5px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+.task-date { font-weight: 800; color: #2d6a4f; font-size: 1.1rem; width: 150px; }
+.task-info { flex: 1; }
+.task-title { font-size: 1.2rem; font-weight: 700; color: #2b2d42; margin-bottom: 5px; }
+.task-type { font-size: 0.85rem; background: #e8f5e9; color: #1b4332; padding: 4px 10px; border-radius: 20px; font-weight: 600; display: inline-block; }
+.task-action { font-size: 1.5rem; color: #adb5bd; cursor: pointer; }
+.task-action:hover { color: #74c69d; }
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media (max-width: 768px) {
+    .cal-container { padding: 1rem; }
+    .header-row { text-align: center; }
+    .title-box h1 { font-size: 1.8rem; }
+    .gen-box { flex-direction: column; padding: 1.25rem; }
+    .gen-btn { width: 100%; }
+    .task-card { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+    .task-date { width: auto; font-size: 1rem; }
+    .task-action { align-self: flex-end; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cal-container fade-in">
+    <div class="header-row">
+        <div class="title-box">
+            <h1>AI Farming Calendar</h1>
+            <p>Generate smart, weather-adjusted schedules for your crop lifecycle.</p>
+        </div>
+        <button onclick="startVoiceDiary()" id="voiceBtn" style="background: #1b4332; color: white; border: none; padding: 12px 24px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; box-shadow: 0 4px 15px rgba(27,67,50,0.2);">
+            <i class="fa fa-microphone" id="micIcon"></i> <span id="micText">Voice Diary Log</span>
+        </button>
+    </div>
+    
+    <div id="diaryStatus" style="display:none; background: #e8f5e9; padding: 1rem; border-radius: 12px; margin-bottom: 2rem; color: #1b4332; font-weight: 600; text-align: center; animation: pulse 1.5s infinite;">
+        <span id="statusText">Listening... Speak now (e.g. "I watered the rice today")</span>
+    </div>
+
+    <div class="gen-box">
+        <div class="form-group">
+            <label>Crop Type</label>
+            <select id="cropType">
+                <option value="Paddy">Paddy / Rice</option>
+                <option value="Sugarcane">Sugarcane</option>
+                <option value="Cotton">Cotton</option>
+                <option value="Tomato">Tomato</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Sowing Date</label>
+            <input type="date" id="ssetDate">
+        </div>
+        <button class="gen-btn" onclick="generateCal()">Generate Schedule</button>
+    </div>
+
+    <div class="timeline" id="agendaList">
+        <div style="text-align:center; padding: 2rem; color: #adb5bd; font-size: 1.1rem;">
+            Select a crop and date to generate your personalized AI routine.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('ssetDate').valueAsDate = new Date();
+
+function generateCal() {
+    const crop = document.getElementById('cropType').value;
+    const date = document.getElementById('ssetDate').value;
+    
+    document.getElementById('agendaList').innerHTML = "<div style='text-align:center;'><i class='fa fa-spinner fa-spin fa-2x' style='color:#74c69d;'></i></div>";
+
+    fetch('/api/generate_calendar', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({crop: crop, sowing_date: date})
+    })
+    .then(r => r.json())
+    .then(res => {
+        const c = document.getElementById('agendaList');
+        c.innerHTML = '';
+        res.data.forEach(task => {
+            const el = document.createElement('div');
+            el.className = 'task-card';
+            el.innerHTML = `
+                <div class="task-date">${task.date}</div>
+                <div class="task-info">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-type"><i class="fa fa-calendar-check"></i> ${task.type}</div>
+                </div>
+                <div class="task-action" onclick="this.style.color='#74c69d';"><i class="fa fa-check-circle"></i></div>
+            `;
+            c.appendChild(el);
+        });
+    });
+}
+
+// ─── AI VOICE DIARY LOGIC ─────────────────────────────
+let recognition;
+function startVoiceDiary() {
+    const micBtn = document.getElementById('voiceBtn');
+    const micIcon = document.getElementById('micIcon');
+    const micText = document.getElementById('micText');
+    const status = document.getElementById('diaryStatus');
+    const statusText = document.getElementById('statusText');
+
+    if (!('webkitSpeechRecognition' in window)) {
+        alert("Your browser does not support voice recognition. Try Chrome.");
+        return;
+    }
+
+    if (recognition) {
+        recognition.stop();
+        recognition = null;
+        return;
+    }
+
+    recognition = new webkitSpeechRecognition();
+    recognition.lang = 'en-IN'; // Indian English
+    recognition.continuous = false;
+    
+    recognition.onstart = () => {
+        status.style.display = 'block';
+        micBtn.style.background = '#e63946';
+        micText.innerText = "Stop Recording";
+        micIcon.className = "fa fa-stop-circle pulse";
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        statusText.innerText = `Parsing: "${transcript}"...`;
+        submitVoiceLog(transcript);
+    };
+
+    recognition.onend = () => {
+        micBtn.style.background = '#1b4332';
+        micText.innerText = "Voice Diary Log";
+        micIcon.className = "fa fa-microphone";
+        setTimeout(() => { status.style.display = 'none'; }, 3000);
+        recognition = null;
+    };
+
+    recognition.onerror = () => {
+        statusText.innerText = "Error occurred. Try again.";
+        recognition.stop();
+    };
+
+    recognition.start();
+}
+
+async function submitVoiceLog(text) {
+    try {
+        const resp = await fetch('/api/voice-diary', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: text})
+        });
+        const res = await resp.json();
+        if (res.status === 'success') {
+            document.getElementById('statusText').innerText = `✅ Successfully logged: ${res.data.title}`;
+            // Prepend to agenda
+            const agenda = document.getElementById('agendaList');
+            const el = document.createElement('div');
+            el.className = 'task-card';
+            el.style.borderLeftColor = '#fca311';
+            el.innerHTML = `
+                <div class="task-date">${res.data.date}</div>
+                <div class="task-info">
+                    <div class="task-title">${res.data.title}</div>
+                    <div class="task-type" style="background:#fff3e0; color:#856404;"><i class="fa fa-microphone"></i> Voice Log</div>
+                </div>
+                <div class="task-action" style="color:#fca311;"><i class="fa fa-star"></i></div>
+            `;
+            const emptyHint = agenda.querySelector('div[style*="color: #adb5bd"]');
+            if(emptyHint) emptyHint.remove();
+            agenda.prepend(el);
+        }
+    } catch (e) {
+        console.error(e);
+    }
+}
+</script>
+{% endblock %}

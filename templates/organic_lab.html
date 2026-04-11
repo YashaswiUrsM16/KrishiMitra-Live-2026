@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block title %}Organic Profit Plan | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --organic-green: #2d6a4f;
+        --soft-green: #d8f3dc;
+        --accent-gold: #fca311;
+    }
+
+    .lab-header {
+        background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 100%);
+        padding: 3rem 2rem;
+        border-radius: 24px;
+        color: white;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(27, 67, 50, 0.15);
+    }
+
+    .lab-header::before {
+        content: "🌿";
+        position: absolute;
+        right: -20px;
+        top: -20px;
+        font-size: 10rem;
+        opacity: 0.1;
+        transform: rotate(15deg);
+    }
+
+    .lab-title {
+        font-size: 2.2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+
+    .lab-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+        max-width: 600px;
+    }
+
+    /* Result Sections */
+    .result-container {
+        display: none;
+        animation: fadeInUp 0.6s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 20px;
+        border: 1px solid #f0f7f4;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover { transform: translateY(-5px); }
+
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--organic-green); }
+
+    .methods-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .method-card {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(45, 106, 79, 0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .method-badge {
+        background: var(--soft-green);
+        color: var(--organic-green);
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        align-self: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .method-header {
+        padding: 1.5rem;
+        background: #f8fffe;
+        border-bottom: 1px solid #f0f7f4;
+    }
+
+    .method-title { font-size: 1.2rem; font-weight: 700; color: #1b4332; }
+    .method-content { padding: 1.5rem; flex-grow: 1; }
+    .method-desc { font-size: 0.95rem; color: #52796f; line-height: 1.6; margin-bottom: 1rem; }
+    .method-impact {
+        background: #fff9ed;
+        color: #d4a373;
+        padding: 10px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .hidden-gem-box {
+        background: linear-gradient(135deg, #fffcf0 0%, #fff4e0 100%);
+        border: 2px dashed #fca311;
+        padding: 2rem;
+        border-radius: 24px;
+        margin-top: 2rem;
+        position: relative;
+    }
+
+    .gem-label {
+        position: absolute;
+        top: -12px;
+        left: 30px;
+        background: var(--accent-gold);
+        color: white;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+    }
+
+    .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 4rem;
+    }
+
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--soft-green);
+        border-top: 4px solid var(--organic-green);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    #methodologyBox {
+        background: #f0faf7;
+        border: 1px solid #d8f3dc;
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="lab-header">
+    <h1 class="lab-title" id="mainTitle">Organic Profit Plan 🌿</h1>
+    <p class="lab-subtitle">Synthesized traditional wisdom and economic justification for your specific crop.</p>
+</div>
+
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p style="font-weight: 600; color: #52796f;">Analyzing regional benchmarks and traditional secrets...</p>
+</div>
+
+<div class="result-container" id="resultArea">
+    <h2 style="color: #1b4332; margin-bottom: 1.5rem;">Economic Justification for <span id="resCrop" style="color: var(--accent-gold);">...</span></h2>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-label">Chemical Cost</span>
+            <span class="stat-value" id="chemCost">₹ 0</span>
+            <span style="font-size: 0.7rem; color: #94a3b8;">Average per acre</span>
+            <div id="breakdownList" style="font-size: 0.65rem; color: #e63946; margin-top: 5px; line-height: 1.2; display:none; border-top: 1px dashed #ffe0e0; padding-top: 5px;"></div>
+        </div>
+        <div class="stat-card" style="background: var(--soft-green); border-color: var(--organic-green);">
+            <span class="stat-label" style="color: var(--organic-green);">Organic Cost</span>
+            <span class="stat-value" id="orgCost">₹ 0</span>
+            <span style="font-size: 0.7rem; color: #1b4332;">Save up to 80%</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Organic Premium</span>
+            <span class="stat-value" id="orgPremium">+0%</span>
+            <span style="font-size: 0.7rem; color: #94a3b8;">Higher market value</span>
+        </div>
+        <div class="stat-card" style="background: #2d6a4f; color: white;">
+            <span class="stat-label" style="color: rgba(255,255,255,0.7);">Net Profit Boost</span>
+            <span class="stat-value" style="color: white;" id="profitBoost">0%</span>
+            <span style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">Total earnings increase</span>
+        </div>
+    </div>
+
+    <div id="methodologyBox">
+        <h4 style="color: #1b4332; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+            <i class="fa fa-info-circle" style="color: var(--organic-green);"></i> Detailed Numerical Justification
+        </h4>
+        <p id="calcLogic" style="font-size: 0.9rem; color: #52796f; line-height: 1.5;"></p>
+        <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 10px; font-style: italic;">
+            Note: Figures are synthesized from regional agricultural benchmarks and organic market trends.
+        </p>
+    </div>
+
+    <h3 style="color: #1b4332; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px;">
+        <i class="fa fa-scroll" style="color: var(--accent-gold);"></i> Traditional Hidden Methods
+    </h3>
+    <div class="methods-grid" id="methodsGrid">
+    </div>
+
+    <div class="hidden-gem-box">
+        <div class="gem-label">⭐ Pro Farmer's Secret</div>
+        <h4 style="margin-bottom: 0.5rem; color: #856404;">The Hidden Organic Gem</h4>
+        <p id="hiddenGem" style="color: #856404; line-height: 1.6; font-weight: 500;">
+        </p>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const crop = urlParams.get('crop') || 'Rice';
+        const location = "{{ current_user.location or 'Karnataka' }}";
+        
+        document.getElementById('mainTitle').innerText = `${crop} Organic Plan 🌿`;
+
+        try {
+            const response = await fetch('/api/organic-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ crop, location })
+            });
+            const res = await response.json();
+
+            if (res.status === 'success') {
+                const data = res.data;
+                document.getElementById('resCrop').innerText = data.crop;
+                document.getElementById('chemCost').innerText = data.profit_comparison.chemical_input_cost;
+                document.getElementById('orgCost').innerText = data.profit_comparison.organic_input_cost;
+                document.getElementById('orgPremium').innerText = data.profit_comparison.organic_premium_price;
+                document.getElementById('profitBoost').innerText = data.profit_comparison.net_profit_gain;
+                document.getElementById('calcLogic').innerText = data.profit_comparison.calculation_logic;
+
+                // Breakdown list - Robust handling of both strings and objects
+                const bList = document.getElementById('breakdownList');
+                if (data.profit_comparison.input_breakdown) {
+                    bList.style.display = 'block';
+                    const formattedItems = data.profit_comparison.input_breakdown.map(item => {
+                        if (typeof item === 'string') return item;
+                        if (typeof item === 'object' && item !== null) {
+                            return Object.values(item).join(': '); // e.g. "Urea: ₹2000"
+                        }
+                        return String(item);
+                    });
+                    bList.innerHTML = '<strong>Cost Justification:</strong><br>' + formattedItems.join('<br>');
+                }
+
+                const grid = document.getElementById('methodsGrid');
+                data.traditional_methods.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = 'method-card';
+                    card.innerHTML = `
+                        <div class="method-header">
+                            <div class="method-badge">TRADITIONAL</div>
+                            <div class="method-title">${m.name}</div>
+                        </div>
+                        <div class="method-content">
+                            <p class="method-desc">${m.description}</p>
+                            <div style="font-size: 0.8rem; font-weight: 800; color: #1b4332; margin-bottom: 5px;">Primary Benefit:</div>
+                            <p class="method-desc" style="font-style: italic;">${m.benefit}</p>
+                            <div class="method-impact">
+                                <i class="fa fa-coins"></i> Impact: <strong>${m.cost_impact}</strong>
+                            </div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                document.getElementById('hiddenGem').innerText = data.hidden_gem;
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultArea').style.display = 'block';
+            }
+        } catch (e) {
+            console.error(e);
+            document.getElementById('loading').innerHTML = '<p style="color: red;">Analysis Error.</p>';
+        }
+    });
+</script>
+{% endblock %}

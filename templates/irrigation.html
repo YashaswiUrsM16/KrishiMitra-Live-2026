@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}Predictive Irrigation | CropSense AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.irrigation-container { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.title-box h1 { font-size: 2.2rem; color: #0a2e1a; font-weight: 800; }
+.title-box p { color: #52796f; font-size: 1rem; }
+
+.refresh-btn {
+    background: white; border: 1px solid #74c69d; color: #1b4332;
+    padding: 10px 20px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.3s;
+}
+.refresh-btn:hover { background: #d8f3dc; }
+
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+.kpi-card { background: white; border-radius: 15px; padding: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.03); text-align: center; }
+.kpi-title { font-size: 0.85rem; color: #6c757d; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+.kpi-value { font-size: 2rem; font-weight: 800; color: #1b4332; }
+
+.rec-card { background: linear-gradient(135deg, #1b4332, #2d6a4f); border-radius: 20px; padding: 3rem; color: white; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 15px 35px rgba(45, 106, 79, 0.2); margin-bottom: 2rem; }
+.rec-text h2 { font-size: 1.5rem; color: #74c69d; margin-bottom: 10px; font-weight: 700; }
+.rec-text h1 { font-size: 3.5rem; font-weight: 900; margin-bottom: 5px; }
+.rec-text p { font-size: 1.1rem; opacity: 0.9; }
+
+.water-drop { font-size: 6rem; text-shadow: 0 10px 20px rgba(0,0,0,0.3); animation: floatDroplet 3s infinite ease-in-out; }
+@keyframes floatDroplet { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media (max-width: 768px) {
+    .irrigation-container { padding: 1rem; }
+    .header-row { flex-direction: column; text-align: center; gap: 1rem; }
+    .rec-card { flex-direction: column; text-align: center; padding: 2rem 1rem; gap: 2rem; }
+    .rec-text h1 { font-size: 2.2rem; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .kpi-value { font-size: 1.5rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="irrigation-container fade-in">
+    <div class="header-row">
+        <div class="title-box">
+            <h1>Predictive Irrigation Intelligence</h1>
+            <p>Save water, boost yield with climate-aware watering schedules.</p>
+        </div>
+        <button class="refresh-btn" onclick="fetchIrrigationData()"><i class="fa fa-sync-alt"></i> Refresh Sensors</button>
+    </div>
+
+    <!-- Smart Recommendation Banner -->
+    <div class="rec-card" id="recCard">
+        <div class="rec-text">
+            <h2>AI Recommendation</h2>
+            <h1 id="lblRec">Analyzing...</h1>
+            <p id="lblWater">Quantity: Calculating...</p>
+        </div>
+        <div class="water-drop" id="waterIcon">💧</div>
+    </div>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-title">Soil Moisture Est.</div>
+            <div class="kpi-value" id="lblMoisture">--%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Rain Probability</div>
+            <div class="kpi-value" id="lblRain">--%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Evapotranspiration</div>
+            <div class="kpi-value"><span id="lblET">--</span> mm/day</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Sustainability Score</div>
+            <div class="kpi-value" style="color:#74c69d;" id="lblSus">--/100</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function fetchIrrigationData() {
+    document.getElementById('lblRec').innerText = "Analyzing...";
+    fetch('/api/irrigation_data')
+    .then(r => r.json())
+    .then(res => {
+        const d = res.data;
+        document.getElementById('lblMoisture').innerText = d.soil_moisture + '%';
+        document.getElementById('lblRain').innerText = d.rain_probability + '%';
+        document.getElementById('lblET').innerText = d.evapotranspiration;
+        document.getElementById('lblSus').innerText = d.sustainability_score + '/100';
+        
+        document.getElementById('lblRec').innerText = d.recommendation;
+        document.getElementById('lblWater').innerText = "Water Quantity: " + (d.recommendation === "SKIP IRRIGATION" ? "0 Liters" : d.water_quantity);
+        
+        const card = document.getElementById('recCard');
+        if(d.recommendation === "SKIP IRRIGATION") {
+            card.style.background = "linear-gradient(135deg, #e8f5e9, #c8e6c9)";
+            document.querySelector('.rec-text h1').style.color = "#1b4332";
+            document.querySelector('.rec-text h2').style.color = "#2d6a4f";
+            document.querySelector('.rec-text p').style.color = "#1b4332";
+            document.getElementById('waterIcon').innerHTML = "🛑";
+        } else {
+            card.style.background = "linear-gradient(135deg, #1b4332, #2d6a4f)";
+            document.querySelector('.rec-text h1').style.color = "white";
+            document.querySelector('.rec-text h2').style.color = "#74c69d";
+            document.querySelector('.rec-text p').style.color = "rgba(255,255,255,0.9)";
+            document.getElementById('waterIcon').innerHTML = "💧";
+        }
+    });
+}
+window.onload = fetchIrrigationData;
+</script>
+{% endblock %}

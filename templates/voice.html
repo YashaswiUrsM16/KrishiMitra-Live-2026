@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% block title %}Live AI Voice Assistant | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+.ivr-container {
+    padding: 2rem;
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Outfit', sans-serif;
+}
+.header-row {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+.header-row h1 {
+    font-size: 2.5rem;
+    color: #1b4332;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+.header-row p {
+    color: #52796f;
+    font-size: 1.1rem;
+}
+
+.call-board {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 3rem 2rem;
+    box-shadow: 0 15px 40px rgba(27, 67, 50, 0.08);
+    border: 1px solid #e8f5e9;
+    position: relative;
+    overflow: hidden;
+}
+.call-board::before {
+    content: '';
+    position: absolute;
+    top:0;left:0;right:0;
+    height: 6px;
+    background: linear-gradient(90deg, #2d6a4f, #74c69d);
+}
+
+.ai-avatar-ring {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: #f0faf4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 0 0 0 rgba(116, 198, 157, 0.5);
+    transition: all 0.3s ease;
+}
+.active-call .ai-avatar-ring.listening {
+    animation: pulse-ring-listen 1.5s infinite;
+}
+.active-call .ai-avatar-ring.speaking {
+    animation: pulse-ring-speak 1s infinite alternate;
+}
+
+@keyframes pulse-ring-listen {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+    70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+@keyframes pulse-ring-speak {
+    0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5), inset 0 0 10px rgba(46, 204, 113, 0.5); }
+    100% { box-shadow: 0 0 40px rgba(46, 204, 113, 1), inset 0 0 20px rgba(46, 204, 113, 0.8); }
+}
+
+.status-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #52796f;
+    margin-bottom: 2rem;
+    min-height: 28px;
+}
+
+.controls {
+    display: flex;
+    gap: 1.5rem;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.lang-select {
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid #74c69d;
+    background: #f0faf4;
+    color: #1b4332;
+    font-size: 1rem;
+    font-weight: 600;
+    outline: none;
+    cursor: pointer;
+}
+
+.btn-call {
+    background: #2ECC71;
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(46, 204, 113, 0.3);
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.btn-call:hover { transform: scale(1.05); background: #27AE60; }
+.btn-call:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-end {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
+    transition: 0.3s;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+.btn-end:hover { transform: scale(1.05); background: #dc2626; }
+
+.transcript-area {
+    width: 100%;
+    margin-top: 1rem;
+    border-top: 1px solid #e8f5e9;
+    padding-top: 2rem;
+    display: none;
+}
+.transcript-box {
+    background: #f9fdfa;
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    border-left: 4px solid #ced4da;
+    display: flex;
+    flex-direction: column;
+}
+.tb-farmer { border-color: #fca311; }
+.tb-ai { border-color: #2d6a4f; background: #e8f5e9; }
+
+.tb-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+.tb-farmer .tb-label { color: #e85d04; }
+.tb-ai .tb-label { color: #1b4332; }
+
+.tb-text { font-size: 1.1rem; color: #2b2d42; line-height: 1.5; }
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media (max-width: 768px) {
+    .ivr-container { padding: 1rem; }
+    .header-row h1 { font-size: 1.8rem; }
+    .header-row p { font-size: 0.95rem; }
+    .ai-avatar-ring { width: 120px; height: 120px; font-size: 4rem; }
+    .controls { flex-direction: column; width: 100%; gap: 1rem; }
+    .lang-select { width: 100%; text-align: center; }
+    .btn-call, .btn-end { width: 100%; justify-content: center; }
+    .call-board { padding: 2rem 1rem; }
+    .tb-text { font-size: 1rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ivr-container fade-in">
+    <div class="header-row">
+        <h1>Voice Calling System 📞</h1>
+        <p>Talk to your personalized farm consultant continuously like a real phone call.</p>
+    </div>
+
+    <div class="call-board" id="callBoard">
+        <div class="ai-avatar-ring" id="avatarRing">👨‍🔬</div>
+        
+        <div class="status-text" id="statusText">Ready for your call</div>
+
+        <div class="controls">
+            <select id="callLang" class="lang-select">
+                <option value="en-IN">English</option>
+                <option value="kn-IN" selected>ಕನ್ನಡ (Kannada)</option>
+                <option value="hi-IN">हिंदी (Hindi)</option>
+                <option value="ta-IN">தமிழ் (Tamil)</option>
+                <option value="te-IN">తెలుగు (Telugu)</option>
+                <option value="ml-IN">മലയാളം (Malayalam)</option>
+            </select>
+            <button class="btn-call" id="btnCall" onclick="startCall()"><i class="fa fa-phone"></i> Call AI</button>
+            <button class="btn-end" id="btnEnd" onclick="endCall()"><i class="fa fa-phone-slash"></i> End Call</button>
+        </div>
+
+        <div class="transcript-area" id="transcriptArea">
+            <div class="transcript-box tb-farmer" id="boxFarmer" style="display:none;">
+                <div class="tb-label" id="farmerLabel"><i class="fa fa-microphone"></i> You</div>
+                <div class="tb-text" id="farmerText">...</div>
+            </div>
+            <div class="transcript-box tb-ai" id="boxAi" style="display:none;">
+                <div class="tb-label"><i class="fa fa-robot"></i> AI Response</div>
+                <div class="tb-text" id="aiText">...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const statusText = document.getElementById('statusText');
+    const avatarRing = document.getElementById('avatarRing');
+    const btnCall = document.getElementById('btnCall');
+    const btnEnd = document.getElementById('btnEnd');
+    const callLang = document.getElementById('callLang');
+    
+    const transcriptArea = document.getElementById('transcriptArea');
+    const boxFarmer = document.getElementById('boxFarmer');
+    const farmerText = document.getElementById('farmerText');
+    const boxAi = document.getElementById('boxAi');
+    const aiText = document.getElementById('aiText');
+
+    let isCallActive = false;
+    let isProcessing = false;
+
+    // Initialize Web Speech API
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            if (transcript.trim() === "") {
+                if (isCallActive) restartListening();
+                return;
+            }
+            
+            // Farmer spoke
+            farmerText.innerText = transcript;
+            boxFarmer.style.display = 'flex';
+            statusText.innerText = "Analyzing response...";
+            
+            avatarRing.classList.remove('listening');
+            isProcessing = true;
+            
+            // Call Backend
+            fetch('/api/voice_call', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: transcript })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(!isCallActive) return; // if user ended call
+                
+                boxAi.style.display = 'flex';
+                aiText.innerText = data.reply;
+                statusText.innerText = "AI Speaking...";
+                
+                speakTextAndListen(data.reply, callLang.value);
+            })
+            .catch(err => {
+                console.error(err);
+                if(isCallActive) {
+                    statusText.innerText = "Connection error. Retrying...";
+                    setTimeout(restartListening, 2000);
+                }
+            });
+        };
+
+        recognition.onerror = (event) => {
+            console.error('Speech recognition error', event.error);
+            if (event.error === 'no-speech' && isCallActive && !isProcessing) {
+                restartListening(); // keep listening loop
+            } else if (isCallActive) {
+                statusText.innerText = "Mic error or timeout. Listening again...";
+                setTimeout(restartListening, 1000);
+            }
+        };
+
+        recognition.onend = () => {
+            // Auto restart if call is still active and we are NOT processing or speaking
+            if (isCallActive && !isProcessing) {
+                restartListening();
+            }
+        };
+    } else {
+        alert("Your browser does not support Speech Recognition. Please use Chrome/Edge.");
+        btnCall.disabled = true;
+    }
+
+    function startCall() {
+        if (!recognition) return;
+        
+        isCallActive = true;
+        isProcessing = false;
+        
+        document.getElementById('callBoard').classList.add('active-call');
+        btnCall.style.display = 'none';
+        btnEnd.style.display = 'flex';
+        callLang.disabled = true;
+        
+        transcriptArea.style.display = 'block';
+        boxFarmer.style.display = 'none';
+        boxAi.style.display = 'none';
+        
+        // Initial Greeting
+        boxAi.style.display = 'flex';
+        let greeting = "Hello, I am listening. How can I assist you with your farm today?";
+        if(callLang.value === "kn-IN") greeting = "ನಮಸ್ಕಾರ, ನಾನು ಕೇಳಿಸಿಕೊಳ್ಳುತ್ತಿದ್ದೇನೆ. ನಾನು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಲಿ?";
+        else if(callLang.value === "hi-IN") greeting = "नमस्ते, मैं सुन रहा हूँ। मैं आपकी कृषि में कैसे मदद कर सकता हूँ?";
+        else if(callLang.value === "ta-IN") greeting = "வணக்கம், நான் கேட்கிறேன். இன்று உங்கள் விவசாயத்திற்கு நான் எப்படி உதவ முடியும்?";
+        else if(callLang.value === "te-IN") greeting = "నమస్కారం, నేను వింటున్నాను. ఈ రోజు మీ వ్యవసాయంలో నేను ఎలా సహాయం చేయగలను?";
+        else if(callLang.value === "ml-IN") greeting = "നമസ്കാരം, ഞാൻ കേൾക്കുന്നുണ്ട്. ഇന്ന് നിങ്ങളുടെ കൃഷിയിൽ ഞാൻ എങ്ങനെ സഹായിക്കണം?";
+        
+        aiText.innerText = greeting;
+        statusText.innerText = "AI Speaking...";
+        
+        speakTextAndListen(greeting, callLang.value);
+    }
+
+    function endCall() {
+        isCallActive = false;
+        isProcessing = false;
+        
+        document.getElementById('callBoard').classList.remove('active-call');
+        btnCall.style.display = 'flex';
+        btnEnd.style.display = 'none';
+        callLang.disabled = false;
+        
+        avatarRing.classList.remove('listening');
+        avatarRing.classList.remove('speaking');
+        statusText.innerText = "Call ended.";
+        
+        if(recognition) recognition.stop();
+        window.speechSynthesis.cancel();
+    }
+
+    function speakTextAndListen(text, lang) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            
+            avatarRing.classList.remove('listening');
+            avatarRing.classList.add('speaking');
+            
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = lang;
+            
+            utterance.onend = () => {
+                avatarRing.classList.remove('speaking');
+                if (isCallActive) {
+                    isProcessing = false;
+                    restartListening();
+                }
+            };
+            
+            utterance.onerror = () => {
+                avatarRing.classList.remove('speaking');
+                if (isCallActive) {
+                    isProcessing = false;
+                    restartListening();
+                }
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        } else {
+            // fallback if no TTS
+            setTimeout(() => {
+                if (isCallActive) {
+                    isProcessing = false;
+                    restartListening();
+                }
+            }, 3000);
+        }
+    }
+
+    function restartListening() {
+        if (!isCallActive || isProcessing) return;
+        
+        try {
+            recognition.lang = callLang.value;
+            recognition.start();
+            statusText.innerText = "Listening...";
+            avatarRing.classList.add('listening');
+            
+            // Optional: reset farmer transcript text to cue they can speak
+            boxFarmer.style.display = 'flex';
+            farmerText.innerText = "(Listening to you...)";
+        } catch(e) {
+            // Usually means already started
+            console.log(e);
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+{% block title %}Krishi Finance & Profit | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #2ECC71;
+        --income: #27AE60;
+        --expense: #e63946;
+        --bg-color: #f0faf4;
+        --panel-bg: #ffffff;
+        --panel-border: rgba(45, 106, 79, 0.15);
+        --text-main: #1b4332;
+        --text-muted: #52796f;
+    }
+
+    .top-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1rem; }
+    .stat-card { background: var(--panel-bg); border: 1px solid var(--panel-border); padding: 1.5rem; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .stat-card label { color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 0.5rem; }
+    .stat-card strong { font-size: 1.8rem; }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-top: 2rem; }
+    .card { background: var(--panel-bg); border: 1px solid var(--panel-border); border-radius: 24px; padding: 1.5rem; }
+
+    .section-title { font-size: 1.1rem; font-weight: 700; border-bottom: 1px solid var(--panel-border); padding-bottom: 0.5rem; margin-bottom: 1.2rem; }
+
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
+    .form-control { width: 100%; padding: 0.7rem; border: 1.5px solid var(--panel-border); border-radius: 10px; font-family: 'Inter'; box-sizing: border-box; }
+    .form-control:focus { outline: none; border-color: var(--primary); }
+
+    .type-toggle { display: flex; gap: 0.5rem; margin-bottom: 1rem; background: #f0faf4; padding: 0.4rem; border-radius: 12px; }
+    .type-btn { flex: 1; padding: 0.6rem; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.85rem; transition: 0.3s; background: transparent; color: var(--text-muted); }
+    .type-btn.active.income { background: var(--income); color: white; }
+    .type-btn.active.expense { background: var(--expense); color: white; }
+
+    .ledger-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    .ledger-table th { text-align: left; font-size: 0.75rem; color: var(--text-muted); padding: 0.8rem; border-bottom: 2px solid #f0faf4; }
+    .ledger-table td { padding: 0.8rem; font-size: 0.9rem; border-bottom: 1px solid #f0faf4; }
+
+    .badge { padding: 4px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+    .badge-income { background: rgba(39, 174, 96, 0.1); color: var(--income); }
+    .badge-expense { background: rgba(230, 57, 70, 0.1); color: var(--expense); }
+
+    .btn-submit { width: 100%; padding: 0.9rem; border-radius: 12px; border: none; background: var(--primary); color: white; font-weight: 700; cursor: pointer; transition: 0.3s; margin-top: 0.5rem; }
+    .btn-submit:hover { background: var(--primary-dark); transform: translateY(-2px); }
+
+    .chart-box { height: 250px; position: relative; }
+
+    /* ── MOBILE OPTIMIZATIONS ── */
+    @media (max-width: 900px) {
+        .top-stats { grid-template-columns: 1fr; gap: 1rem; }
+        .dashboard-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        .stat-card { padding: 1.25rem; }
+        .stat-card strong { font-size: 1.5rem; }
+        .card { padding: 1.25rem; }
+    }
+
+    @media (max-width: 600px) {
+        .ledger-table thead { display: none; }
+        .ledger-table tr { display: flex; flex-direction: column; padding: 1rem 0; border-bottom: 2px solid #f0faf4; }
+        .ledger-table td { padding: 0.25rem 0; border: none; }
+        .ledger-table td:last-child { font-size: 1.1rem; margin-top: 0.5rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="finance-wrap">
+    <header class="header">
+        <h1 style="font-size: 2rem; margin: 0;">Krishi Finance Intelligence</h1>
+        <p style="color: var(--text-muted); margin-top: 5px;">Unified ledger for monitoring seasonal investments and harvest returns.</p>
+    </header>
+
+    <div class="top-stats">
+        <div class="stat-card">
+            <label>Total Investment</label>
+            <strong style="color: var(--expense);">₹{{ '{:,.0f}'.format(total_expense) }}</strong>
+        </div>
+        <div class="stat-card">
+            <label>Harvest Revenue</label>
+            <strong style="color: var(--income);">₹{{ '{:,.0f}'.format(total_income) }}</strong>
+        </div>
+        <div class="stat-card" style="border-left: 5px solid {% if net_profit >= 0 %}var(--income){% else %}var(--expense){% endif %};">
+            <label>Net Seasonal Profit</label>
+            <strong style="color: var(--text-main);">₹{{ '{:,.0f}'.format(net_profit) }}</strong>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Input Form -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+                <h3 class="section-title">New Financial Entry</h3>
+                <form action="{{ url_for('expense.expense') }}" method="POST">
+                    <div class="type-toggle">
+                        <button type="button" class="type-btn active expense" onclick="setType('expense', this)">Expense</button>
+                        <button type="button" class="type-btn income" onclick="setType('income', this)">Income</button>
+                        <input type="hidden" name="type" id="recordType" value="expense">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Item Name / Source</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Sold 50kg Wheat" required>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" name="amount" class="form-control" placeholder="12000" min="1" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select name="category" class="form-control" required>
+                                <option value="Seeds">Seeds & Crop</option>
+                                <option value="Fertilizer">Fertilizers & Pesticides</option>
+                                <option value="Labor">Labor & Wages</option>
+                                <option value="Machinery">Machinery & Rent</option>
+                                <option value="Sale">Crop Sales (Income)</option>
+                                <option value="Subsidy">Govt Subsidies (Income)</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Sync to Ledger</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3 class="section-title">Investment Distribution</h3>
+                <div class="chart-box">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ledger & Trends -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+                <h3 class="section-title">Net Cash Flow History</h3>
+                <div class="chart-box">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card" style="flex: 1; min-height: 400px; overflow-y: auto;">
+                <h3 class="section-title">Digital Ledger Book</h3>
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Entry</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if expenses %}
+                            {% for e in expenses %}
+                            <tr>
+                                <td style="color: var(--text-muted); font-size: 0.8rem;">{{ e.date.strftime('%d %b') }}</td>
+                                <td>
+                                    <div style="font-weight: 600;">{{ e.title }}</div>
+                                    <div style="font-size: 0.7rem; color: var(--text-muted);">{{ e.category }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ e.type }}">{{ e.type }}</span>
+                                </td>
+                                <td style="font-weight: 800; color: {% if e.type == 'income' %}var(--income){% else %}var(--expense){% endif %};">
+                                    {% if e.type == 'income' %}+{% else %}-{% endif %}₹{{ '{:,.0f}'.format(e.amount) }}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" style="text-align: center; padding: 4rem; color: var(--text-muted);">
+                                    No financial records found. Add your first entry!
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    function setType(type, btn) {
+        document.getElementById('recordType').value = type;
+        document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active', 'income', 'expense'));
+        btn.classList.add('active', type);
+    }
+
+    {% if expenses %}
+    document.addEventListener('DOMContentLoaded', function() {
+        const catLabels = {{ chart_labels_cat | tojson | safe }};
+        const catValues = {{ chart_values_cat | tojson | safe }};
+        const monthLabels = {{ chart_labels_month | tojson | safe }};
+        const monthValues = {{ chart_values_month | tojson | safe }};
+
+        // Pie Chart
+        new Chart(document.getElementById('categoryChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: catLabels,
+                datasets: [{
+                    data: catValues,
+                    backgroundColor: ['#2ECC71', '#3498db', '#f1c40f', '#e74c3c', '#9b59b6', '#1b4332'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: {size: 10} } } },
+                cutout: '65%'
+            }
+        });
+
+        // Bar Chart
+        new Chart(document.getElementById('trendChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [{
+                    label: 'Net Flow (₹)',
+                    data: monthValues,
+                    backgroundColor: monthValues.map(v => v >= 0 ? 'rgba(39, 174, 96, 0.7)' : 'rgba(230, 57, 70, 0.7)'),
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { font: { size: 10 } }, grid: { display:false } },
+                    y: { ticks: { font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.05)' } }
+                }
+            }
+        });
+    });
+    {% endif %}
+</script>
+{% endblock %}

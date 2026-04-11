@@ -1,0 +1,393 @@
+{% extends "base.html" %}
+{% block title %}Farming Tips — KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+.tips-page { font-family:'Inter',sans-serif; }
+
+/* ── HERO ── */
+.tips-hero {
+  background: #e8f5e9;
+  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.tips-hero::before {
+  content:'💡';
+  position:absolute;
+  font-size:10rem;
+  right:-1rem;top:-2rem;
+  opacity:0.05;
+}
+.tips-hero-title { font-size:1.6rem;font-weight:900;letter-spacing:-0.5px; }
+.tips-hero-sub   { font-size:0.85rem;color:#52796f;margin-top:4px; }
+.tips-hero-right {
+  display:flex;
+  gap:1rem;
+  position:relative;
+  z-index:2;
+}
+.tips-stat {
+  background:rgba(45, 106, 79, 0.05);
+  border:1px solid rgba(45, 106, 79, 0.1);
+  border-radius:12px;
+  padding:0.75rem 1.2rem;
+  text-align:center;
+  backdrop-filter:blur(10px);
+}
+.tips-stat-val { font-size:1.3rem;font-weight:900; }
+.tips-stat-lbl { font-size:0.68rem;opacity:0.65;margin-top:2px; }
+
+/* ── AI TIP CARD ── */
+.ai-tip-card {
+  background: white;
+  border-radius: 20px;
+  border: 1.5px solid #e8f5e9;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(45,106,79,0.08);
+}
+.ai-tip-header {
+  background: #1b4332;
+  padding: 1.2rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ai-tip-avatar {
+  width: 48px;height: 48px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.ai-tip-title { font-size:1rem;font-weight:800;color:white; }
+.ai-tip-sub   { font-size:0.72rem;color:rgba(255,255,255,0.65);margin-top:2px; }
+.ai-refresh-btn {
+  margin-left:auto;
+  background:rgba(255,255,255,0.15);
+  border:1px solid rgba(255,255,255,0.2);
+  color:white;
+  padding:9px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  font-size:0.82rem;
+  font-weight:600;
+  transition:all 0.2s;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.ai-refresh-btn:hover { background:rgba(255,255,255,0.25); }
+.ai-refresh-btn:disabled { opacity:0.6;cursor:not-allowed; }
+
+.ai-tip-body {
+  padding: 1.5rem;
+  font-size: 0.92rem;
+  color: #1b4332;
+  line-height: 1.8;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ai-tip-icon {
+  width: 40px;height: 40px;
+  background: #d8f3dc;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+/* ── TABS ── */
+.tabs-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.s-tab {
+  padding: 9px 20px;
+  border-radius: 10px;
+  border: 1.5px solid #e8f5e9;
+  background: white;
+  color: #52796f;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.s-tab:hover { border-color:#74c69d;color:#1b4332;background:#f0faf4; }
+.s-tab.active {
+  background: linear-gradient(135deg,#1b4332,#2d6a4f);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(27,67,50,0.3);
+}
+
+/* ── TIPS GRID ── */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 1rem;
+}
+
+.tip-item {
+  background: white;
+  border-radius: 18px;
+  padding: 1.2rem 1.4rem;
+  border: 1.5px solid #e8f5e9;
+  transition: all 0.25s;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  position: relative;
+  overflow: hidden;
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.tip-item::before {
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:3px;
+  background:linear-gradient(180deg,#2d6a4f,#74c69d);
+  border-radius:3px 0 0 3px;
+}
+.tip-item:hover {
+  border-color:#b7e4c7;
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(45,106,79,0.1);
+}
+
+.tip-num {
+  width: 34px;height: 34px;
+  background: linear-gradient(135deg,#1b4332,#2d6a4f);
+  color: white;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  flex-shrink: 0;
+}
+.tip-content { flex:1; }
+.tip-top {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:5px;
+}
+.tip-icon { font-size:1.2rem; }
+.tip-text {
+  font-size:0.86rem;
+  color:#1b4332;
+  line-height:1.65;
+}
+
+/* Single column tips on mobile */
+@media(max-width:768px) {
+  .tips-grid { grid-template-columns:1fr; }
+  .tips-hero  { flex-direction:column;gap:1.2rem; }
+  .tips-hero-right { width:100%;justify-content:space-between; }
+  .tabs-row { gap:0.4rem; }
+  .s-tab { padding:7px 14px;font-size:0.78rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="tips-page">
+
+  <!-- Hero -->
+  <div class="tips-hero">
+    <div>
+      <div class="tips-hero-title">💡 Farming Tips & Advice</div>
+      <div class="tips-hero-sub">Expert knowledge for every season — grow smarter every day</div>
+    </div>
+    <div class="tips-hero-right">
+      <div class="tips-stat">
+        <div class="tips-stat-val">50+</div>
+        <div class="tips-stat-lbl">Expert Tips</div>
+      </div>
+      <div class="tips-stat">
+        <div class="tips-stat-val">7</div>
+        <div class="tips-stat-lbl">Categories</div>
+      </div>
+      <div class="tips-stat">
+        <div class="tips-stat-val">AI</div>
+        <div class="tips-stat-lbl">Daily Tips</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Tip of the Day -->
+  <div class="ai-tip-card">
+    <div class="ai-tip-header">
+      <div class="ai-tip-avatar">🤖</div>
+      <div>
+        <div class="ai-tip-title">Autonomous AI Consultant</div>
+        <div class="ai-tip-sub">Powered by KrishiMitraAI — Strategy updated in real-time</div>
+      </div>
+      <button class="ai-refresh-btn" onclick="getAITip()" id="refreshBtn">
+        ✨ Generate Strategy
+      </button>
+    </div>
+    <div class="ai-tip-body">
+      <div class="ai-tip-icon">🌱</div>
+      <div id="aiTipText">
+        After wheat harvest in March-April, let the field rest briefly. 
+        Plant short-duration crops like Moong dal or Sunflower — 
+        this increases soil nitrogen and prepares it for the next season! 💚
+      </div>
+    </div>
+  </div>
+
+  <!-- Season Tabs -->
+  <div class="tabs-row">
+    <button class="s-tab active" onclick="showSeason('general',this)">🌾 General</button>
+    <button class="s-tab" onclick="showSeason('kharif',this)">☀️ Kharif</button>
+    <button class="s-tab" onclick="showSeason('rabi',this)">❄️ Rabi</button>
+    <button class="s-tab" onclick="showSeason('zaid',this)">🌸 Zaid</button>
+    <button class="s-tab" onclick="showSeason('soil',this)">🌍 Soil Health</button>
+    <button class="s-tab" onclick="showSeason('water',this)">💧 Water</button>
+    <button class="s-tab" onclick="showSeason('pest',this)">🐛 Pest Control</button>
+  </div>
+
+  <!-- Tips Grid -->
+  <div class="tips-grid" id="tipsGrid"></div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const allTips = {
+  general: [
+    { tip:'Get your soil tested every 2-3 years — Soil Health Card is FREE from the government!', icon:'🌍' },
+    { tip:'Practice crop rotation — never grow the same crop repeatedly, it depletes soil nutrients.', icon:'🔄' },
+    { tip:'Always buy certified seeds — they give 20-30% higher yield than uncertified ones.', icon:'🌱' },
+    { tip:'Spray pesticides in the morning — wind is low and effectiveness is much higher.', icon:'🌅' },
+    { tip:'Use compost or vermicompost in your fields — reduces need for chemical fertilizers.', icon:'♻️' },
+    { tip:'Monitor your crops regularly — early detection of disease saves up to 40% of losses.', icon:'👀' },
+    { tip:'Install the PM Kisan app — check scheme status and payment details anytime.', icon:'📱' },
+    { tip:'Register on eNAM platform — sell your crops online and get the best market price.', icon:'💻' },
+  ],
+  kharif: [
+    { tip:'Treat seeds with Rhizobium or Trichoderma before sowing — builds disease resistance.', icon:'🌱' },
+    { tip:'Prepare rice nursery in June — transplant in July for optimal yield.', icon:'🌾' },
+    { tip:'Arrange proper field drainage before Kharif — waterlogging kills crops.', icon:'🌧️' },
+    { tip:'Use pheromone traps for pink bollworm control in cotton — reduces pesticide use.', icon:'🌸' },
+    { tip:'Stop irrigation during soybean flowering — prevents lodging and increases yield.', icon:'🫘' },
+    { tip:'Deep plow after Kharif harvest and expose soil to sun — kills soil-borne diseases.', icon:'☀️' },
+  ],
+  rabi: [
+    { tip:'First wheat irrigation at Crown Root Initiation (CRI) stage — 20-25 days after sowing.', icon:'🌿' },
+    { tip:'Spray imidacloprid on mustard before flowering to control aphid attack.', icon:'🌼' },
+    { tip:'Use sprinkler irrigation at dawn to protect crops from frost in winter mornings.', icon:'❄️' },
+    { tip:'Use Trichoderma-treated seeds for chickpea — prevents deadly wilt disease.', icon:'🫘' },
+    { tip:'Harvest wheat when 85% grains are ripe — over-ripening causes sunburn losses.', icon:'🌾' },
+    { tip:'Apply final NPK dose at flag leaf stage for maximum Rabi crop yield.', icon:'💊' },
+  ],
+  zaid: [
+    { tip:'Use plastic mulching for watermelon and muskmelon in Zaid — saves 40% water.', icon:'🍉' },
+    { tip:'Switch to drip irrigation in summer — saves 40-50% water and boosts yield.', icon:'💧' },
+    { tip:'Install shade nets over Zaid vegetables — protects from extreme heat stress.', icon:'🌿' },
+    { tip:'Use trellis system for cucumber and bottle gourd — improves fruit quality significantly.', icon:'🥒' },
+    { tip:'Irrigate in the evening in summer — morning and afternoon evaporation wastes water.', icon:'🌅' },
+  ],
+  soil: [
+    { tip:'Maintain soil pH between 6 and 7.5 — optimal range for most Indian crops.', icon:'🌍' },
+    { tip:'Add lime to acidic soil and gypsum to alkaline soil to restore pH balance.', icon:'⚗️' },
+    { tip:'Make vermicompost at home — easy, cheap, and extremely beneficial for soil health.', icon:'🪱' },
+    { tip:'Grow Dhaincha or Sunhemp as green manure and plow it in — boosts soil nitrogen.', icon:'🌿' },
+    { tip:'Never leave soil bare — plant cover crops or apply mulch to protect soil structure.', icon:'🌱' },
+    { tip:'Deep plow every 2-3 years — breaks hardpan and improves water penetration.', icon:'🚜' },
+  ],
+  water: [
+    { tip:'Install drip irrigation — saves 50-70% water and significantly increases yield.', icon:'💧' },
+    { tip:'Build farm ponds for rainwater harvesting — store monsoon water for dry seasons.', icon:'🌧️' },
+    { tip:'Irrigate in early morning or evening — afternoon irrigation loses 30% to evaporation.', icon:'⏰' },
+    { tip:'Mulch your fields — plastic or dry grass cover reduces water requirements by 40%.', icon:'♻️' },
+    { tip:'Use a tensiometer to check soil moisture — only irrigate when actually needed.', icon:'📊' },
+  ],
+  pest: [
+    { tip:'Follow IPM (Integrated Pest Management) — biological controls first, chemicals last.', icon:'🐛' },
+    { tip:'Spray neem oil solution — safe organic pesticide effective against many insects.', icon:'🌿' },
+    { tip:'Install yellow sticky traps in fields — catches whiteflies and aphids effectively.', icon:'🟡' },
+    { tip:'Use pheromone traps to catch male insects — controls pest population naturally.', icon:'🪤' },
+    { tip:'Rotate pesticide chemicals — prevents resistance buildup in pest populations.', icon:'🔄' },
+    { tip:'Release Trichogramma cards — biological control for caterpillar and stem borer.', icon:'🦠' },
+  ],
+};
+
+let currentSeason = 'general';
+
+function showSeason(season, btn) {
+  currentSeason = season;
+  document.querySelectorAll('.s-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const tips = allTips[season] || [];
+  document.getElementById('tipsGrid').innerHTML = tips.map((t, i) => `
+    <div class="tip-item" style="animation-delay:${i * 0.05}s">
+      <div class="tip-num">${i + 1}</div>
+      <div class="tip-content">
+        <div class="tip-top">
+          <span class="tip-icon">${t.icon}</span>
+        </div>
+        <div class="tip-text">${t.tip}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function getAITip() {
+  const btn  = document.getElementById('refreshBtn');
+  const text = document.getElementById('aiTipText');
+  btn.textContent = '⏳ Loading...';
+  btn.disabled    = true;
+
+  try {
+    const res  = await fetch('/api/chat', {
+      method:  'POST',
+      headers: { 'Content-Type':'application/json' },
+      body:    JSON.stringify({
+        message:  'Give me one unique, practical and actionable farming tip for Indian farmers — keep it under 50 words',
+        language: 'en'
+      })
+    });
+    const data = await res.json();
+    text.textContent = data.reply || 'Could not load tip. Try again!';
+    if (typeof showToast === 'function') showToast('New AI tip loaded! 💡', 'success');
+  } catch(e) {
+    text.textContent = '❌ Could not load tip. Please try again!';
+  }
+
+  btn.innerHTML = '🔄 Get New Tip';
+  btn.disabled  = false;
+}
+
+// Init
+showSeason('general', null);
+</script>
+{% endblock %}

@@ -1,0 +1,677 @@
+{% extends "base.html" %}
+{% block title %}KrishiMitraAI — The Future of Smart Farming{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
+
+.hero {
+  min-height: 100vh;
+  background: #f0faf4;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.bg-circle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.06;
+  animation: float 10s ease-in-out infinite;
+}
+.c1 { width:600px;height:600px;background:#74c69d;top:-150px;right:-150px; }
+.c2 { width:400px;height:400px;background:#b7e4c7;bottom:50px;left:-100px;animation-delay:4s; }
+.c3 { width:250px;height:250px;background:#52b788;top:45%;right:20%;animation-delay:7s; }
+
+@keyframes float {
+  0%,100% { transform:translateY(0) scale(1); }
+  50%      { transform:translateY(-30px) scale(1.04); }
+}
+
+/* Navbar */
+  padding: 1rem 5rem;
+  position: relative;
+  z-index: 10;
+}
+
+@media(max-width: 1024px) {
+  .top-nav { padding: 1rem 2rem; }
+}
+
+@media(max-width: 768px) {
+  .top-nav { padding: 1rem; }
+  .brand-name { font-size: 1.1rem; }
+  .brand-icon { width: 34px; height: 34px; font-size: 1rem; }
+  .nav-btn { padding: 8px 14px; font-size: 0.75rem; }
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+.brand-icon {
+  width: 44px; height: 44px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  backdrop-filter: blur(10px);
+}
+.brand-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1b4332;
+  letter-spacing: -0.5px;
+}
+.brand-name span { color: #b7e4c7; }
+
+.nav-btns { display:flex;gap:0.75rem; }
+.nav-btn {
+  padding: 10px 22px;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+.nav-btn-ghost {
+  background: transparent;
+  border: 1.5px solid rgba(45,106,79,0.3);
+  color: #2d6a4f;
+}
+.nav-btn-ghost:hover { background:rgba(255,255,255,0.1);border-color:white; }
+.nav-btn-white {
+  background: #2d6a4f;
+  border: 1.5px solid #2d6a4f;
+  color: white;
+}
+.nav-btn-white:hover { background:#d8f3dc;transform:translateY(-2px); }
+
+/* Hero Grid */
+.hero-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  padding: 2rem 5rem 5rem;
+  position: relative;
+  z-index: 10;
+}
+
+/* Left */
+.hero-left { color: #1b4332; }
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(116,198,157,0.15);
+  border: 1px solid rgba(116,198,157,0.3);
+  border-radius: 100px;
+  padding: 7px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #74c69d;
+  margin-bottom: 1.5rem;
+}
+.pill-dot {
+  width: 7px; height: 7px;
+  background: #74c69d;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+.hero-h1 {
+  font-size: 3.8rem;
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -2px;
+  margin-bottom: 1.2rem;
+}
+.hero-h1 .green {
+  background: linear-gradient(90deg, #74c69d, #b7e4c7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-p {
+  font-size: 1.05rem;
+  color: #52796f;
+  line-height: 1.75;
+  margin-bottom: 2.2rem;
+  max-width: 460px;
+}
+
+.cta-row { display:flex;gap:1rem;align-items:center; }
+.cta-btn-main {
+  padding: 15px 36px;
+  background: #2d6a4f;
+  color: white;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.25s;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cta-btn-main:hover { transform:translateY(-3px);box-shadow:0 16px 48px rgba(0,0,0,0.3); }
+.cta-btn-ghost {
+  padding: 15px 28px;
+  background: transparent;
+  color: #2d6a4f;
+  border: 1.5px solid #2d6a4f;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: all 0.25s;
+  backdrop-filter: blur(10px);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cta-btn-ghost:hover { background:rgba(255,255,255,0.15);transform:translateY(-3px); }
+
+/* Stats */
+.stats-row {
+  display: flex;
+  gap: 2.5rem;
+  margin-top: 3rem;
+  padding-top: 2.5rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.stat-item {}
+.stat-num {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1b4332;
+  line-height: 1;
+}
+.stat-lbl {
+  font-size: 0.75rem;
+  color: #52796f;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Right — Image Section */
+.hero-right { position: relative; }
+
+.img-wrapper {
+  border-radius: 28px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: 0 32px 80px rgba(0,0,0,0.4);
+  position: relative;
+  background: #1b4332;
+}
+
+.farmer-photo {
+  width: 100%;
+  height: 460px;
+  object-fit: cover;
+  display: block;
+  filter: brightness(0.85) saturate(1.1);
+}
+
+.img-overlay {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(to top, rgba(10,46,26,0.85), transparent);
+}
+
+.img-label {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  color: white;
+}
+.img-label-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.img-label-sub {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Floating badges */
+.badge-float {
+  position: absolute;
+  background: white;
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  z-index: 20;
+}
+.badge-float.b1 {
+  top: -18px; left: -18px;
+  animation: bob 3s ease-in-out infinite;
+}
+.badge-float.b2 {
+  top: 40%; right: -22px;
+  animation: bob 4s ease-in-out infinite 1s;
+}
+.badge-float.b3 {
+  bottom: 60px; left: -22px;
+  animation: bob 3.5s ease-in-out infinite 2s;
+}
+@keyframes bob { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+
+.badge-icon {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.badge-title { font-size:0.75rem;font-weight:700;color:#1b4332; }
+.badge-sub   { font-size:0.68rem;color:#52796f; }
+
+/* Features */
+.features {
+  background: #f8fffe;
+  padding: 6rem 5rem;
+}
+.sec-head { text-align:center;margin-bottom:3.5rem; }
+.sec-tag {
+  display: inline-block;
+  background: #d8f3dc;
+  color: #1b4332;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.sec-title {
+  font-size: 2.4rem;
+  font-weight: 900;
+  color: #0a2e1a;
+  letter-spacing: -1px;
+  margin-bottom: 0.75rem;
+}
+.sec-sub { color:#52796f;font-size:1rem;max-width:500px;margin:0 auto;line-height:1.6; }
+
+.feat-grid {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.feat-card {
+  background: white;
+  border-radius: 20px;
+  padding: 2rem;
+  border: 1.5px solid #e8f5e9;
+  transition: all 0.3s;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+.feat-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #2d6a4f, #74c69d);
+  transform: scaleX(0);
+  transition: transform 0.3s;
+}
+.feat-card:hover::before { transform:scaleX(1); }
+.feat-card:hover {
+  border-color: #b7e4c7;
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(45,106,79,0.12);
+}
+.feat-icon {
+  width: 54px; height: 54px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  margin-bottom: 1.2rem;
+}
+.feat-title { font-size:1rem;font-weight:800;color:#0a2e1a;margin-bottom:0.5rem; }
+.feat-desc  { font-size:0.84rem;color:#52796f;line-height:1.65; }
+.feat-link  { font-size:0.82rem;color:#2d6a4f;font-weight:700;margin-top:1rem;display:block; }
+
+/* Steps */
+.steps {
+  background: white;
+  padding: 6rem 5rem;
+}
+.steps-row {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 2rem;
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+.steps-row::before {
+  content: '';
+  position: absolute;
+  top: 34px;
+  left: 12%;
+  width: 76%;
+  height: 2px;
+  background: linear-gradient(90deg, #d8f3dc, #2d6a4f, #d8f3dc);
+}
+.step {
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+.step-circle {
+  width: 68px; height: 68px;
+  background: linear-gradient(135deg, #1b4332, #40916c);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  margin: 0 auto 1rem;
+  box-shadow: 0 8px 24px rgba(45,106,79,0.35);
+}
+.step-title { font-weight:800;color:#0a2e1a;margin-bottom:0.4rem;font-size:0.9rem; }
+.step-desc  { font-size:0.8rem;color:#52796f;line-height:1.5; }
+
+/* CTA */
+.cta-section {
+  background: #e8f5e9;
+  padding: 6rem 5rem;
+  text-align: center;
+  color: #1b4332;
+  position: relative;
+  overflow: hidden;
+}
+.cta-section::before {
+  content: '🌾';
+  position: absolute;
+  font-size: 20rem;
+  opacity: 0.03;
+  top: -50px;
+  left: -50px;
+}
+.cta-h2  { font-size:2.8rem;font-weight:900;letter-spacing:-1px;margin-bottom:1rem; }
+.cta-sub { font-size:1.05rem;color:#52796f;margin-bottom:2.5rem; }
+
+/* Footer */
+.site-footer {
+  background: #e8f5e9;
+  color: #52796f;
+  padding: 2rem 5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+}
+.footer-brand { color:#1b4332;font-weight:800;font-size:1rem; }
+.footer-brand span { color:#74c69d; }
+
+@media(max-width:900px){
+  .hero-grid { grid-template-columns:1fr; padding: 2rem 1.5rem 4rem; text-align: center; }
+  .hero-left { display: flex; flex-direction: column; align-items: center; }
+  .hero-p { margin-left: auto; margin-right: auto; font-size: 1rem; }
+  .top-nav   { padding:1rem 1.5rem; }
+  .hero-h1   { font-size: 2.5rem; letter-spacing: -1px; }
+  .hero-right{ display:none; }
+  .feat-grid { grid-template-columns:1fr 1fr; }
+  .steps-row { grid-template-columns:repeat(2,1fr); }
+  .steps-row::before { display:none; }
+  .features,.steps,.cta-section { padding:4rem 1.5rem; }
+  .site-footer { flex-direction:column;gap:0.75rem;text-align:center;padding:2rem; }
+  .cta-row { justify-content: center; }
+}
+@media(max-width:600px){
+  .feat-grid { grid-template-columns:1fr; }
+  .cta-row   { flex-direction:column; width: 100%; }
+  .cta-btn-main, .cta-btn-ghost { width: 100%; justify-content: center; }
+  .stats-row { justify-content: center; gap: 1rem; }
+  .stat-num { font-size: 1.5rem; }
+  .hero-h1 { font-size: 2.2rem; }
+  .cta-h2 { font-size: 2rem; }
+}
+</style>
+{% endblock %}
+
+{% block content_noauth %}
+
+<!-- HERO -->
+<div class="hero">
+  <div class="bg-circle c1"></div>
+  <div class="bg-circle c2"></div>
+  <div class="bg-circle c3"></div>
+
+  <nav class="top-nav">
+    <a href="#" class="brand">
+      <div class="brand-icon">🌾</div>
+      <span class="brand-name">Krishi<span>Mitra</span>AI</span>
+    </a>
+    <div class="nav-btns">
+      <a href="{{ url_for('auth.login') }}"    class="nav-btn nav-btn-ghost">Sign In</a>
+      <a href="{{ url_for('auth.register') }}" class="nav-btn nav-btn-white">Get Started Free →</a>
+    </div>
+  </nav>
+
+  <div class="hero-grid">
+    <!-- Left -->
+    <div class="hero-left">
+      <div class="pill">
+        <div class="pill-dot"></div>
+        AI-Powered Precision Agriculture
+      </div>
+
+      <h1 class="hero-h1">
+        Farm Smarter,<br/>
+        Earn <span class="green">More.</span>
+      </h1>
+
+      <p class="hero-p">
+        KrishiMitraAI gives every farmer access to expert-level crop recommendations, 
+        real-time pest detection, live market prices, and government scheme guidance — 
+        all in one powerful platform.
+      </p>
+
+      <div class="cta-row">
+        <a href="{{ url_for('auth.register') }}" class="cta-btn-main">
+          🚀 Start for Free
+        </a>
+        <a href="{{ url_for('auth.login') }}" class="cta-btn-ghost">
+          Sign In →
+        </a>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-num">10+</div>
+          <div class="stat-lbl">AI Features</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">35+</div>
+          <div class="stat-lbl">Market Prices</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">12+</div>
+          <div class="stat-lbl">Govt Schemes</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">24/7</div>
+          <div class="stat-lbl">AI Support</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right — Real Farmer Photo -->
+    <div class="hero-right">
+      <div class="img-wrapper">
+        <img
+          src="https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=600&q=80&fit=crop"
+          alt="Smart Farmer using AI"
+          class="farmer-photo"
+          onerror="this.src='https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600&q=80&fit=crop'"
+        />
+        <div class="img-overlay"></div>
+        <div class="img-label">
+          <div class="img-label-title">AI-Powered Farming</div>
+          <div class="img-label-sub">Making every farmer a smart farmer</div>
+        </div>
+      </div>
+
+      <!-- Floating badges -->
+      <div class="badge-float b1">
+        <div class="badge-icon" style="background:#d8f3dc;">🌱</div>
+        <div>
+          <div class="badge-title">Crop Recommended!</div>
+          <div class="badge-sub">Wheat — Perfect for your soil</div>
+        </div>
+      </div>
+
+      <div class="badge-float b2">
+        <div class="badge-icon" style="background:#fff3cd;">📈</div>
+        <div>
+          <div class="badge-title">Market Price</div>
+          <div class="badge-sub">Wheat ₹2,150/qt ▲ +50</div>
+        </div>
+      </div>
+
+      <div class="badge-float b3">
+        <div class="badge-icon" style="background:#e8f4fd;">🤖</div>
+        <div>
+          <div class="badge-title">AI Chatbot Ready</div>
+          <div class="badge-sub">Ask in Hindi or English</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="sec-head">
+    <div class="sec-tag">✨ Everything You Need</div>
+    <h2 class="sec-title">One Platform, All Solutions</h2>
+    <p class="sec-sub">From seed to sale — KrishiMitraAI guides you at every step of farming.</p>
+  </div>
+
+  <div class="feat-grid">
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#d8f3dc;">🌱</div>
+      <div class="feat-title">Crop Recommendation</div>
+      <div class="feat-desc">AI analyzes your soil type, weather conditions and season to suggest the most profitable crop.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#fce8e8;">🐛</div>
+      <div class="feat-title">Pest & Disease Detection</div>
+      <div class="feat-desc">Upload a photo of your plant leaf — our AI instantly identifies diseases and suggests treatment.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#e8f0fe;">🤖</div>
+      <div class="feat-title">Multilingual AI Chatbot</div>
+      <div class="feat-desc">Ask farming questions in Hindi, English, Marathi or Punjabi — get expert answers instantly.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#fff8e1;">📊</div>
+      <div class="feat-title">Live Market Prices</div>
+      <div class="feat-desc">Real-time mandi prices for 35+ vegetables, fruits, grains and spices — updated daily.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#e8f8f5;">🌤️</div>
+      <div class="feat-title">Weather + Smart Alerts</div>
+      <div class="feat-desc">5-day weather forecast with AI-powered farming tips tailored to current conditions.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+    <a href="{{ url_for('auth.register') }}" class="feat-card">
+      <div class="feat-icon" style="background:#f3e8ff;">🏛️</div>
+      <div class="feat-title">Government Schemes</div>
+      <div class="feat-desc">PM Kisan, Fasal Bima, Kisan Credit Card — all 12+ government schemes with direct apply links.</div>
+      <span class="feat-link">Try it free →</span>
+    </a>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="steps">
+  <div class="sec-head">
+    <div class="sec-tag">⚡ Simple Process</div>
+    <h2 class="sec-title">Get Started in 4 Steps</h2>
+    <p class="sec-sub">Up and running in under 2 minutes — completely free.</p>
+  </div>
+
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-circle">📝</div>
+      <div class="step-title">Create Account</div>
+      <div class="step-desc">Sign up free — takes less than a minute</div>
+    </div>
+    <div class="step">
+      <div class="step-circle">📍</div>
+      <div class="step-title">Enter Details</div>
+      <div class="step-desc">Add your location, soil type and crop info</div>
+    </div>
+    <div class="step">
+      <div class="step-circle">🤖</div>
+      <div class="step-title">Get AI Insights</div>
+      <div class="step-desc">Receive smart recommendations instantly</div>
+    </div>
+    <div class="step">
+      <div class="step-circle">💰</div>
+      <div class="step-title">Grow & Profit</div>
+      <div class="step-desc">Make data-driven decisions, earn more</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="pill" style="margin-bottom:1.5rem;display:inline-flex;">
+    <div class="pill-dot"></div>
+    100% Free — No credit card required
+  </div>
+  <h2 class="cta-h2">Ready to Farm Smarter?</h2>
+  <p class="cta-sub">Join thousands of farmers already using KrishiMitraAI</p>
+  <a href="{{ url_for('auth.register') }}" class="cta-btn-main"
+     style="display:inline-flex;font-size:1.1rem;padding:18px 48px;">
+    🚀 Get Started for Free
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-brand">Krishi<span>Mitra</span>AI</div>
+  <div>Made with 💚 for Indian Farmers</div>
+  <div>© 2026 KrishiMitraAI — </div>
+</footer>
+
+{% endblock %}

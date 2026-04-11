@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% block title %}Crop Intelligence Engine | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #2ECC71;
+        --bg-color: #f8fafc;
+        --panel-border: rgba(27, 67, 50, 0.1);
+        --text-main: #1b4332;
+    }
+
+    .crop-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; margin-top: 1rem; }
+    .card { background: white; border: 1px solid var(--panel-border); border-radius: 24px; padding: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.03); position: relative; }
+    
+    .form-section-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px; }
+    
+    .form-group { margin-bottom: 1.5rem; }
+    .form-header { display: flex; justify-content: space-between; margin-bottom: 0.6rem; }
+    .form-header label { font-weight: 700; color: #475569; font-size: 0.9rem; }
+    .val-display { color: var(--primary); font-weight: 800; }
+    
+    input[type=range] { width: 100%; accent-color: var(--primary); height: 6px; border-radius: 5px; }
+    input[type=number] { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 0.8rem; font-family: 'Inter'; font-weight: 600; }
+    input[type=number]:focus { outline: none; border-color: var(--primary); }
+
+    .sync-btn { 
+        background: #f0faf4; 
+        color: var(--primary); 
+        border: 1.5px solid rgba(46, 204, 113, 0.2); 
+        padding: 10px 16px; 
+        border-radius: 12px; 
+        font-weight: 700; 
+        font-size: 0.8rem; 
+        cursor: pointer; 
+        margin-bottom: 1.5rem; 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        transition: 0.3s;
+    }
+    .sync-btn:hover { background: #dcfce7; transform: translateY(-1px); }
+
+    .pred-btn { 
+        width: 100%; 
+        background: linear-gradient(135deg, #1b4332, #2d6a4f); 
+        color: white; 
+        padding: 1.2rem; 
+        border: none; 
+        border-radius: 16px; 
+        font-weight: 800; 
+        font-size: 1rem; 
+        cursor: pointer; 
+        box-shadow: 0 10px 20px rgba(27, 67, 50, 0.2);
+        transition: 0.3s;
+    }
+    .pred-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(27, 67, 50, 0.3); }
+
+    /* Results */
+    #results-placeholder { text-align: center; color: #94a3b8; padding: 4rem 2rem; }
+    
+    .result-hero { text-align: center; padding-bottom: 2rem; border-bottom: 1px solid #f1f5f9; margin-bottom: 2rem; }
+    .crop-badge { font-size: 3rem; margin-bottom: 0.5rem; display: block; }
+    .crop-name { font-size: 2.5rem; font-weight: 800; color: #1b4332; margin: 0; }
+    .suitability { display: inline-block; background: #dcfce7; color: #15803d; padding: 6px 16px; border-radius: 20px; font-weight: 800; font-size: 0.9rem; margin-top: 1rem; }
+
+    .top3-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 1.5rem; }
+    .top3-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 1rem; border-radius: 16px; text-align: center; transition: 0.3s; }
+    .top3-card.active { border-color: var(--primary); background: #f0faf4; }
+
+    .advisory-box { background: white; border: 1px solid #f1c40f; border-left: 5px solid #f1c40f; padding: 1.2rem; border-radius: 12px; margin-top: 1rem; }
+
+        flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+    }
+
+    /* Organic Integration - Exact Match to Original Lab */
+    :root {
+        --organic-green: #2d6a4f;
+        --soft-green: #d8f3dc;
+        --accent-gold: #fca311;
+    }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 20px; border: 1px solid #f0f7f4; display: flex; flex-direction: column; gap: 8px; transition: transform 0.3s; }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-label { font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; }
+    .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--organic-green); }
+
+    .methods-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .method-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid rgba(45, 106, 79, 0.05); display: flex; flex-direction: column; }
+    .method-header { padding: 1.5rem; background: #f8fffe; border-bottom: 1px solid #f0f7f4; }
+    .method-title { font-size: 1.2rem; font-weight: 700; color: #1b4332; }
+    .method-badge { background: var(--soft-green); color: var(--organic-green); padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; align-self: flex-start; margin-bottom: 1rem; }
+    .method-content { padding: 1.5rem; flex-grow: 1; }
+    .method-desc { font-size: 0.95rem; color: #52796f; line-height: 1.6; margin-bottom: 1rem; }
+    .method-impact { background: #fff9ed; color: #d4a373; padding: 10px; border-radius: 10px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+
+    .hidden-gem-box { background: linear-gradient(135deg, #fffcf0 0%, #fff4e0 100%); border: 2px dashed #fca311; padding: 2rem; border-radius: 24px; margin-top: 2rem; position: relative; }
+    .gem-label { position: absolute; top: -12px; left: 30px; background: var(--accent-gold); color: white; padding: 4px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; }
+    
+    #methodologyBox { background: #f0faf7; border: 1px solid #d8f3dc; padding: 1.5rem; border-radius: 16px; margin-bottom: 2.5rem; }
+    
+    #organic-loader { display: none; flex-direction: column; align-items: center; gap: 1rem; padding: 4rem; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    @media (max-width: 768px) {
+        .methods-grid { grid-template-columns: 1fr; }
+        .crop-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        .card { padding: 1.25rem; border-radius: 20px; }
+        .crop-page header h1 { font-size: 1.6rem !important; margin-bottom: 0.5rem; }
+        .crop-page header p { font-size: 0.9rem; }
+        
+        .crop-name { font-size: 1.8rem; }
+        .crop-badge { font-size: 2.5rem; }
+        .top3-row { grid-template-columns: 1fr; gap: 0.75rem; }
+        .suitability { font-size: 0.8rem; padding: 4px 12px; }
+        
+        .sync-btn { width: 100%; justify-content: center; }
+        .pred-btn { padding: 1rem; font-size: 0.9rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="crop-page">
+    <header style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2.2rem; font-weight: 800;">Crop Decision Intelligence</h1>
+        <p style="color: #64748b;">Real-time ML modeling tailored to your soil profile and climate data.</p>
+    </header>
+
+    <div class="crop-grid">
+        <!-- Form -->
+        <div class="card">
+            <div id="loader">
+                <div class="spinner"></div>
+                <p style="margin-top: 1rem; font-weight: 800; color: #1b4332;">Consulting ML Models...</p>
+            </div>
+            
+            <button class="sync-btn" onclick="syncWeather()">
+                <i class="fa fa-sync-alt"></i> Sync Real-time Weather Telemetry
+            </button>
+
+            <form id="cropForm">
+                <div class="form-section-title">🧪 Soil Nutrients (NPK)</div>
+                <div class="form-group">
+                    <div class="form-header"><label>Nitrogen</label><span class="val-display" id="val-n">50</span></div>
+                    <input type="range" id="N" name="N" min="0" max="140" value="50" oninput="document.getElementById('val-n').innerText = this.value">
+                </div>
+                <div class="form-group">
+                    <div class="form-header"><label>Phosphorus</label><span class="val-display" id="val-p">50</span></div>
+                    <input type="range" id="P" name="P" min="0" max="140" value="50" oninput="document.getElementById('val-p').innerText = this.value">
+                </div>
+                <div class="form-group">
+                    <div class="form-header"><label>Potassium</label><span class="val-display" id="val-k">50</span></div>
+                    <input type="range" id="K" name="K" min="0" max="205" value="50" oninput="document.getElementById('val-k').innerText = this.value">
+                </div>
+
+                <div class="form-section-title">🌦️ Climate & Condition</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Temp (°C)</label>
+                        <input type="number" id="temperature" name="temperature" value="25" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Humidity (%)</label>
+                        <input type="number" id="humidity" name="humidity" value="60" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.8rem; color: #64748b; font-weight: 700;">pH Level</label>
+                        <input type="number" id="ph" name="ph" value="6.5" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.8rem; color: #64748b; font-weight: 700;">Rainfall (mm)</label>
+                        <input type="number" id="rainfall" name="rainfall" value="100" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+                    <button type="submit" class="pred-btn" style="flex: 1;">Run ML Prediction 🚀</button>
+                    <button type="button" class="sync-btn" onclick="document.getElementById('soilCardInput').click()" style="width: auto; padding: 0 1.5rem; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa fa-camera"></i> Scan Card
+                    </button>
+                    <input type="file" id="soilCardInput" accept="image/*" style="display: none;" onchange="handleSoilOCR(this)">
+                </div>
+            </form>
+        </div>
+
+        <!-- Results -->
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card" id="results-placeholder">
+                <div style="font-size: 4rem; opacity: 0.1; margin-bottom: 1rem;">🛰️</div>
+                <h3>Telemetry Pending</h3>
+                <p>Select your soil parameters to receive high-precision AI crop recommendations.</p>
+            </div>
+
+            <div class="card" id="results-container" style="display: none;">
+                <div class="result-hero">
+                    <span id="cropEmoji" class="crop-badge">🌱</span>
+                    <h2 class="crop-name" id="res-top-crop">Wheat</h2>
+                    <div class="suitability" id="res-score">94.5% Compatibility</div>
+                    <div class="suitability" id="res-accuracy" style="background:#e0f2fe; color:#0369a1; margin-left: 10px;">Accuracy: 98.2%</div>
+                </div>
+
+                <div class="form-section-title">📊 Top 3 Candidates</div>
+                <div class="top3-row" id="res-top3"></div>
+
+                <div class="form-section-title" style="margin-top: 2rem;">💡 Expert Advisory</div>
+                <div class="advisory-box">
+                    <strong style="display: block; color: #856404; margin-bottom: 5px;">Fertilizer Strategy:</strong>
+                    <span id="res-ferti" style="font-size: 0.95rem; color: #475569;">...</span>
+                    
+                    <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px dashed rgba(27,67,50,0.1);">
+                        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 10px;">Want to eliminate chemical costs?</p>
+                        <button onclick="goToOrganic()" class="sync-btn" style="background: #f0faf4; color: #2d6a4f; border-color: #2d6a4f; width: 100%; justify-content: center; padding: 12px;">
+                            <i class="fa fa-leaf"></i> Switch to Organic Strategy 🌿
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="advisory-box" style="border-left: 5px solid #2ECC71; border-color: #2ECC71;">
+                    <strong style="display: block; color: #1b4332; margin-bottom: 5px;">Profit Booster (Secondary Crop):</strong>
+                    <span id="res-secondary" style="font-size: 0.95rem; color: #475569;">...</span>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function goToOrganic() {
+        const cropName = document.getElementById('res-top-crop').innerText;
+        window.open(`/organic-lab?crop=${cropName}`, '_blank');
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // We no longer auto-sync weather on load to keep the server responsive
+        // User can click the sync button manually if needed.
+    });
+
+    async function syncWeather() {
+        const btn = document.querySelector('.sync-btn');
+        if(!btn) return;
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Syncing...';
+        try {
+            const resp = await fetch('/api/current_weather');
+            const data = await resp.json();
+            if (data.temperature) {
+                document.getElementById('temperature').value = data.temperature.toFixed(1);
+                document.getElementById('humidity').value = data.humidity;
+                document.getElementById('rainfall').value = data.rainfall || 100;
+                console.log(`Weather telemetry synced!`);
+            }
+        } catch (e) {
+            console.error('Weather sync failed');
+        }
+        btn.innerHTML = originalHtml;
+    }
+
+    const cropEmojis = { 'rice': '🌾', 'wheat': '🍞', 'maize': '🌽', 'cotton': '☁️', 'sugarcane': '🎋', 'mango': '🥭', 'banana': '🍌', 'pomegranate': '🍎', 'apple': '🍏', 'coffee': '☕' };
+
+    async function handleSoilOCR(input) {
+        if (!input.files || !input.files[0]) return;
+        
+        const loader = document.getElementById('loader');
+        loader.style.display = 'flex';
+        loader.querySelector('p').innerText = 'AI is reading your Soil Health Card...';
+
+        const formData = new FormData();
+        formData.append('image', input.files[0]);
+
+        try {
+            const resp = await fetch('/api/ocr-soil', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await resp.json();
+            
+            if (res.status === 'success') {
+                const vals = res.data;
+                if (vals.N) document.getElementById('N').value = vals.N;
+                if (vals.P) document.getElementById('P').value = vals.P;
+                if (vals.K) document.getElementById('K').value = vals.K;
+                if (vals.ph) document.getElementById('ph').value = vals.ph;
+                
+                // Update slider values
+                document.querySelectorAll('input[type="range"]').forEach(i => i.dispatchEvent(new Event('input')));
+                
+                alert('Successfully extracted soil data from your card! 🎉');
+            } else {
+                alert('OCR Failed: ' + (res.message || 'Unknown error'));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('Error connecting to AI Vision service.');
+        } finally {
+            loader.style.display = 'none';
+            loader.querySelector('p').innerText = 'Consulting ML Models...';
+        }
+    }
+
+    document.getElementById('cropForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        document.getElementById('loader').style.display = 'flex';
+        
+        const formData = {
+            N: document.getElementById('N').value,
+            P: document.getElementById('P').value,
+            K: document.getElementById('K').value,
+            temperature: document.getElementById('temperature').value,
+            humidity: document.getElementById('humidity').value,
+            ph: document.getElementById('ph').value,
+            rainfall: document.getElementById('rainfall').value,
+        };
+
+        try {
+            const response = await fetch('/api/ml_crop', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            const data = await response.json();
+            
+            document.getElementById('results-placeholder').style.display = 'none';
+            document.getElementById('results-container').style.display = 'block';
+            
+            const cropLow = data.top_crop.crop.toLowerCase();
+            document.getElementById('res-top-crop').innerText = data.top_crop.crop;
+            document.getElementById('cropEmoji').innerText = cropEmojis[cropLow] || '🌱';
+            document.getElementById('res-score').innerText = `Suitability: ${data.soil_suitability_score}%`;
+            document.getElementById('res-accuracy').innerText = `Confidence Level: ${data.top_crop.confidence}%`;
+            document.getElementById('res-ferti').innerText = data.top_crop.fertilizer;
+            document.getElementById('res-secondary').innerText = data.top_crop.secondary_crop;
+
+            const top3Div = document.getElementById('res-top3');
+            top3Div.innerHTML = '';
+            data.top3.forEach((item, idx) => {
+                top3Div.innerHTML += `
+                    <div class="top3-card ${idx===0?'active':''}">
+                        <div style="font-weight: 800; font-size: 0.95rem;">${item.crop}</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">${item.confidence}%</div>
+                    </div>
+                `;
+            });
+        } catch(e) { console.error(e); }
+        document.getElementById('loader').style.display = 'none';
+    });
+</script>
+{% endblock %}

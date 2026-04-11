@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}🌾 KrishiMitraAI{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  {% block extra_css %}{% endblock %}
+  <style>
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+    body { 
+        background: #eef9f5; 
+        color: #123d2b; 
+        overflow-x: hidden; 
+        margin: 0; 
+        padding: 0; 
+        width: 100%; 
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      background: #f8fffe;
+      padding: 0 2rem;
+      height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.2);
+      border-bottom: 1px solid rgba(116,198,157,0.15);
+    }
+    .navbar-brand {
+      color: #1b4332;
+      font-size: 1.2rem;
+      font-weight: 800;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      letter-spacing: -0.5px;
+    }
+    .navbar-brand .brand-icon {
+      width: 36px; height: 36px;
+      background: rgba(116,198,157,0.2);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+    .brand-crop { color: #1b4332; }
+    .brand-sense { color: #2d6a4f; }
+
+    .navbar-menu { display:flex;align-items:center;gap:0.5rem; }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(116,198,157,0.1);
+      border: 1px solid rgba(116,198,157,0.2);
+      border-radius: 10px;
+      padding: 6px 14px;
+      color: #1b4332;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .nav-user-dot {
+      width: 8px; height: 8px;
+      background: #74c69d;
+      border-radius: 50%;
+      animation: blink 2s infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:0.3} }
+
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: 9px;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-btn-ghost {
+      color: #2d6a4f;
+      background: transparent;
+      border: 1px solid rgba(45,106,79,0.2);
+    }
+    .nav-btn-ghost:hover {
+      background: rgba(45,106,79,0.05);
+      color: #1b4332;
+    }
+    .nav-btn-logout {
+      color: #ff8a80;
+      background: rgba(255,138,128,0.1);
+      border: 1px solid rgba(255,138,128,0.2);
+    }
+    .nav-btn-logout:hover {
+      background: rgba(255,138,128,0.2);
+    }
+
+    /* ── SIDEBAR ── */
+    .layout { display:flex; min-height:calc(100vh - 62px); background: #f0faf7; }
+
+    .sidebar {
+      width: 240px;
+      background: white;
+      border-right: 1px solid rgba(27, 67, 50, 0.05);
+      padding: 1.5rem 0.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: sticky;
+      top: 62px;
+      height: calc(100vh - 62px);
+      overflow-y: auto;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-section {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      padding: 1.2rem 12px 0.5rem;
+    }
+
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      text-decoration: none;
+      color: #475569;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sidebar-item:hover {
+      background: rgba(46, 204, 113, 0.08);
+      color: #1b4332;
+      transform: translateX(4px);
+    }
+    .sidebar-item.active {
+      background: linear-gradient(135deg, #1b4332, #2d6a4f);
+      color: #ffffff;
+      box-shadow: 0 8px 20px rgba(27, 67, 50, 0.2);
+    }
+    .sidebar-item .icon { font-size: 1.1rem; width: 26px; text-align: center; }
+
+    .main-content {
+      flex: 1;
+      padding: 2.5rem;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: #f4fcfa;
+      animation: contentFade 0.4s ease-out;
+      max-width: 100%;
+    }
+    @keyframes contentFade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── FLASH ── */
+    .flash-wrap { padding: 0.5rem 2rem 0; }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 10px;
+      margin-bottom: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .alert-success { background:#d8f3dc;color:#1b4332;border-left:4px solid #2d6a4f; }
+    .alert-danger  { background:#ffe0e0;color:#7d0000;border-left:4px solid #e63946; }
+    .alert-info    { background:#ddf4f0;color:#1b4332;border-left:4px solid #40916c; }
+
+    @media(max-width: 768px) {
+      .navbar { padding: 0 1rem; }
+      .navbar-brand { font-size: 1rem; gap: 6px; }
+      .navbar-brand .brand-icon { width: 30px; height: 30px; font-size: 0.9rem; }
+      .navbar-menu { gap: 0.25rem; }
+      .nav-user { display: none; } /* Hide user name on small mobile */
+      .nav-btn { padding: 6px 10px; font-size: 0.75rem; }
+
+      .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 62px;
+        z-index: 1000;
+        width: 280px;
+        height: calc(100vh - 62px);
+        background: white;
+        transition: left 0.3s ease;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+        display: flex; /* Override display:none from earlier */
+      }
+      .sidebar.open { left: 0; }
+      .main-content { padding: 1rem; width: 100%; }
+      .layout { position: relative; }
+      
+      .hamburger {
+        display: block !important;
+        background: none;
+        border: none;
+        color: #1b4332;
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 5px;
+        margin-right: 10px;
+      }
+
+      @media (max-width: 480px) {
+        .nav-btn-text { display: none; }
+        .nav-btn { padding: 8px; }
+        .navbar-brand span span.brand-crop { display: none; } /* Show only MitraAI on tiny screens? No, maybe just scale down */
+        .brand-sense { font-size: 0.9rem; }
+        .notif-wrapper { margin-right: 5px; }
+      }
+    }
+
+    @media(min-width: 769px) {
+      .hamburger { display: none !important; }
+    }
+
+    /* Overlay for mobile sidebar */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 62px;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.3);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+    }
+    .sidebar-overlay.open { display: block; }
+
+    /* ── NOTIFICATIONS BELL ── */
+    .notif-wrapper { position: relative; margin-right: 15px; }
+    .notif-bell {
+      background: none; border: none; font-size: 1.2rem; color: #1b4332;
+      cursor: pointer; position: relative; padding: 5px;
+    }
+    .notif-badge {
+      position: absolute; top: 0px; right: -2px;
+      background: #e63946; color: white; font-size: 0.65rem;
+      font-weight: 800; padding: 2px 5px; border-radius: 10px;
+      display: none; box-shadow: 0 0 5px rgba(230,57,70,0.5);
+    }
+    .notif-dropdown {
+      position: absolute; top: 45px; right: -10px; width: 340px;
+      background: white; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      border: 1px solid rgba(116,198,157,0.2); z-index: 1000;
+      display: none; flex-direction: column; overflow: hidden;
+      transform-origin: top right; animation: dropdownPop 0.2s ease-out;
+    }
+    @keyframes dropdownPop { from{opacity:0;transform:scale(0.95);} to{opacity:1;transform:scale(1);} }
+    .notif-header { padding: 15px 20px; background: #f0faf4; border-bottom: 1px solid #e8f5e9; font-weight: 700; color: #1b4332; display: flex; justify-content: space-between;}
+    .notif-list { max-height: 350px; overflow-y: auto; }
+    .notif-item { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s; }
+    .notif-item:hover { background: #f8fffe; }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-title { font-size: 0.9rem; font-weight: 700; color: #1b4332; margin-bottom: 4px; display:flex; justify-content:space-between; }
+    .notif-time { font-size: 0.7rem; color: #94a3b8; font-weight: 500; }
+    .notif-msg { font-size: 0.82rem; color: #52796f; line-height: 1.4; }
+    
+    .prior-Emergency .notif-title { color: #e63946; }
+    .prior-Warning .notif-title { color: #fca311; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div style="display: flex; align-items: center;">
+    <button class="hamburger" id="hamburgerBtn" title="Toggle Menu">
+      <i class="fa fa-bars"></i>
+    </button>
+    <a href="{{ url_for('index') }}" class="navbar-brand">
+      <div class="brand-icon">🌾</div>
+      <span><span class="brand-crop">Krishi</span><span class="brand-sense">Mitra</span>AI</span>
+    </a>
+  </div>
+  <div class="navbar-menu">
+    {% if current_user.is_authenticated %}
+      <!-- Notifications -->
+      <div class="notif-wrapper">
+        <button class="notif-bell" id="notifBtn">
+          <i class="fa fa-bell"></i>
+          <span class="notif-badge" id="notifCount">0</span>
+        </button>
+        <div class="notif-dropdown" id="notifDropdown">
+          <div class="notif-header">
+            <span>Smart Alerts 🚨</span>
+            <span style="font-size:0.75rem; color:#74c69d; cursor:pointer;">Mark read</span>
+          </div>
+          <div class="notif-list" id="notifList">
+            <div style="padding: 20px; text-align:center; color:#94a3b8; font-size:0.85rem;"><i class="fa fa-spinner fa-spin"></i> Fetching alerts...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nav-user">
+        <div class="nav-user-dot"></div>
+        {{ current_user.name }}
+      </div>
+      <a href="{{ url_for('auth.logout') }}" class="nav-btn nav-btn-logout">
+        <i class="fa fa-sign-out-alt"></i> <span class="nav-btn-text">Sign Out</span>
+      </a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}"    class="nav-btn nav-btn-ghost">Sign In</a>
+      <a href="{{ url_for('auth.register') }}" class="nav-btn"
+         style="background:#2d6a4f;color:white;border:1px solid #40916c;">
+        Get Started →
+      </a>
+    {% endif %}
+  </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+          {% if category == 'success' %}✅
+          {% elif category == 'danger' %}❌
+          {% else %}ℹ️{% endif %}
+          {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+{% if current_user.is_authenticated %}
+<div class="layout">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-section">Main</div>
+    <a href="{{ url_for('dashboard.dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}">
+      <span class="icon">🏠</span> Dashboard
+    </a>
+
+    <div class="sidebar-section">Farming Tools</div>
+    <a href="{{ url_for('weather.weather') }}"
+       class="sidebar-item {% if request.endpoint == 'weather.weather' %}active{% endif %}">
+      <span class="icon">🌤️</span> Weather
+    </a>
+    <a href="{{ url_for('crop.crop') }}"
+       class="sidebar-item {% if request.endpoint == 'crop.crop' %}active{% endif %}">
+      <span class="icon">🌱</span> Crop Guide
+    </a>
+    <a href="{{ url_for('pest.pest') }}"
+       class="sidebar-item {% if request.endpoint == 'pest.pest' %}active{% endif %}">
+      <span class="icon">🐛</span> Pest Detection
+    </a>
+    <a href="{{ url_for('chat.chatbot') }}"
+       class="sidebar-item {% if request.endpoint == 'chat.chatbot' %}active{% endif %}">
+      <span class="icon">🤖</span> AI Chatbot
+      <span class="badge-new">AI</span>
+    </a>
+    <a href="{{ url_for('voice.ivr_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'voice.ivr_dashboard' %}active{% endif %}">
+      <span class="icon">📞</span> Voice Assistant
+      <span class="badge-new" style="background:#fca311;">LIVE</span>
+    </a>
+    <a href="{{ url_for('simulator.simulator') }}"
+       class="sidebar-item {% if request.endpoint == 'simulator.simulator' %}active{% endif %}">
+      <span class="icon">🌍</span> Farm Simulator
+      <span class="badge-new" style="background:#2ECC71;">NEW</span>
+    </a>
+    <a href="{{ url_for('outreach.outreach_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'outreach.outreach_dashboard' %}active{% endif %}">
+      <span class="icon">📡</span> Proactive Outreach
+      <span class="badge-new" style="background:#e63946;">AUTO</span>
+    </a>
+    <a href="{{ url_for('irrigation.irrigation_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'irrigation.irrigation_dashboard' %}active{% endif %}">
+      <span class="icon">💧</span> Smart Irrigation
+    </a>
+    <a href="{{ url_for('radar.radar_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'radar.radar_dashboard' %}active{% endif %}">
+      <span class="icon">📡</span> Disease Radar
+    </a>
+    <a href="{{ url_for('calendar.calendar_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'calendar.calendar_dashboard' %}active{% endif %}">
+      <span class="icon">📅</span> Farm Calendar
+    </a>
+    <a href="{{ url_for('community.community_dashboard') }}"
+       class="sidebar-item {% if request.endpoint == 'community.community_dashboard' %}active{% endif %}">
+      <span class="icon">🎙️</span> Voice Community
+    </a>
+
+
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">Market & Finance</div>
+    <a href="{{ url_for('market') }}"
+       class="sidebar-item {% if request.endpoint=='market' %}active{% endif %}">
+      <span class="icon">📊</span> Market Prices
+    </a>
+    <a href="{{ url_for('expense.expense') }}"
+       class="sidebar-item {% if request.endpoint == 'expense.expense' %}active{% endif %}">
+      <span class="icon">💰</span> Krishi Finance
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">Resources</div>
+    <a href="{{ url_for('schemes') }}"
+       class="sidebar-item {% if request.endpoint=='schemes' %}active{% endif %}">
+      <span class="icon">🏛️</span> Govt Schemes
+    </a>
+    <a href="{{ url_for('tips') }}"
+       class="sidebar-item {% if request.endpoint=='tips' %}active{% endif %}">
+      <span class="icon">💡</span> Farming Tips
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <!-- User Info Bottom -->
+    <div style="padding:10px 12px;margin-top:auto;">
+      <div style="background:#f0faf4;border-radius:10px;padding:10px 12px;">
+        <div style="font-size:0.78rem;font-weight:700;color:#1b4332;">
+          👤 {{ current_user.name }}
+        </div>
+        <div style="font-size:0.72rem;color:#52796f;margin-top:2px;">
+          📍 {{ current_user.location or 'Location not set' }}
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <main class="main-content fade-in">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+{% else %}
+<main>{% block content_noauth %}{% endblock %}</main>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script>
+  {% if current_user.is_authenticated %}
+  document.addEventListener('DOMContentLoaded', () => {
+    const notifBtn = document.getElementById('notifBtn');
+    const notifDropdown = document.getElementById('notifDropdown');
+    const notifCount = document.getElementById('notifCount');
+    const notifList = document.getElementById('notifList');
+
+    // Sidebar Toggle Logic
+    const hamburgerBtn = document.getElementById('hamburgerBtn');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+
+    if(hamburgerBtn && sidebar) {
+      const toggleSidebar = () => {
+        sidebar.classList.toggle('open');
+        sidebarOverlay.classList.toggle('open');
+        document.body.style.overflow = sidebar.classList.contains('open') ? 'hidden' : 'auto';
+      };
+
+      hamburgerBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSidebar();
+      });
+
+      sidebarOverlay.addEventListener('click', toggleSidebar);
+
+      // Close sidebar on link click (mobile)
+      const sidebarLinks = sidebar.querySelectorAll('a');
+      sidebarLinks.forEach(link => {
+        link.addEventListener('click', () => {
+          if (window.innerWidth <= 768) {
+            toggleSidebar();
+          }
+        });
+      });
+    }
+
+    if(notifBtn) {
+      notifBtn.addEventListener('click', (e) => {
+        const isDisplay = notifDropdown.style.display === 'flex';
+        notifDropdown.style.display = isDisplay ? 'none' : 'flex';
+        if(!isDisplay) {
+          notifCount.style.display = 'none'; // hide badge on open
+        }
+      });
+
+      // Poll alerts
+      function fetchAlerts() {
+        fetch('/api/alerts/live')
+          .then(r => r.json())
+          .then(data => {
+            if(data.status === 'success' && data.alerts.length > 0) {
+              notifList.innerHTML = '';
+              data.alerts.forEach(alert => {
+                const item = document.createElement('div');
+                item.className = `notif-item prior-${alert.priority}`;
+                item.innerHTML = `
+                  <div class="notif-title">
+                    <span>${alert.title}</span>
+                    <span class="notif-time">${alert.time}</span>
+                  </div>
+                  <div class="notif-msg">${alert.message}</div>
+                `;
+                notifList.appendChild(item);
+              });
+              notifCount.innerText = data.alerts.length;
+              if (notifDropdown.style.display !== 'flex') {
+                notifCount.style.display = 'block';
+              }
+            } else {
+              notifList.innerHTML = '<div style="padding: 20px; text-align:center; color:#94a3b8; font-size:0.85rem;">No active alerts ✅</div>';
+            }
+          });
+      }
+
+      fetchAlerts();
+      setInterval(fetchAlerts, 60000); // 1 min sync
+    }
+  });
+  {% endif %}
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

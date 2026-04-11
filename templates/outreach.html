@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Proactive AI Outreach | CropSense AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.outreach-container { padding: 2rem; max-width: 1200px; margin: 0 auto; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.title-box h1 { font-size: 2.2rem; color: #0a2e1a; font-weight: 800; }
+.title-box p { color: #52796f; font-size: 1rem; }
+
+.sim-btn {
+    background: linear-gradient(135deg, #e63946, #d90429);
+    color: white; border: none; padding: 14px 28px; border-radius: 12px;
+    font-size: 1.1rem; font-weight: 700; cursor: pointer;
+    box-shadow: 0 8px 24px rgba(230, 57, 70, 0.3); transition: all 0.3s ease;
+}
+.sim-btn:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(230, 57, 70, 0.4); }
+
+.dash-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+
+/* Alert Board */
+.alert-board { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+.board-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 1.5rem; color: #1b4332; }
+
+.alert-card {
+    background: #f8f9fa; border-left: 5px solid #ccc; padding: 1.5rem;
+    border-radius: 12px; margin-bottom: 1rem; transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    animation: slideIn 0.5s ease-out;
+}
+@keyframes slideIn { from {opacity:0; transform:translateX(-20px);} to {opacity:1; transform:translateX(0);} }
+.alert-card.danger { border-left-color: #e63946; background: #fff0f1; }
+.alert-card.warning { border-left-color: #fca311; background: #fffdf5; }
+.alert-card.info { border-left-color: #4361ee; background: #f0f4ff; }
+
+.alert-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.85rem; font-weight: 700; }
+.danger .alert-header { color: #e63946; } .warning .alert-header { color: #d0870b; } .info .alert-header { color: #4361ee; }
+
+.alert-trigger { font-weight: 800; font-size: 1.1rem; color: #2b2d42; margin-bottom: 5px; }
+.alert-message { font-size: 0.95rem; color: #6c757d; margin-bottom: 15px; }
+.alert-footer { display: flex; gap: 10px; }
+.tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 6px; font-weight: 700; }
+.tag-district { background: #e9ecef; color: #495057; }
+.tag-action { background: #1b4332; color: white; }
+
+/* Timeline Log */
+.timeline { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); height: fit-content; }
+.timeline-item { padding-left: 20px; border-left: 2px solid #e8f5e9; position: relative; margin-bottom: 1.5rem; }
+.timeline-item::before {
+    content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px;
+    background: #74c69d; border-radius: 50%;
+}
+.tl-time { font-size: 0.75rem; color: #adb5bd; font-weight: 600; margin-bottom: 4px; }
+.tl-text { font-size: 0.9rem; color: #1b4332; font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="outreach-container fade-in">
+    <div class="header-row">
+        <div class="title-box">
+            <h1>Proactive AI Outreach Engine</h1>
+            <p>Autonomous Monitoring & Mass Notification System</p>
+        </div>
+        <button class="sim-btn" onclick="triggerAlert()">
+            <i class="fa fa-bolt"></i> Simulate Autonomous Alert
+        </button>
+    </div>
+
+    <div class="dash-grid">
+        <div class="alert-board">
+            <div class="board-title">Active AI Alerts (Live Feed)</div>
+            <div id="alertsContainer">
+                <div style="color:#adb5bd; font-size:0.9rem; text-align:center; padding:2rem;">Waiting for an anomaly to be detected...</div>
+            </div>
+        </div>
+
+        <div class="timeline">
+            <div class="board-title">System Activity Log</div>
+            <div id="timelineContainer">
+                <div class="timeline-item">
+                    <div class="tl-time">System Started</div>
+                    <div class="tl-text">Monitoring APIs (Weather, Market) active.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isFirst = true;
+
+function triggerAlert() {
+    if(isFirst) {
+        document.getElementById('alertsContainer').innerHTML = '';
+        isFirst = false;
+    }
+
+    fetch('/api/simulate_outreach', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+        if(data.status === 'success') {
+            const payload = data.data;
+            const timeStr = new Date().toLocaleTimeString();
+
+            // Inject Card
+            const card = document.createElement('div');
+            card.className = `alert-card ${payload.color}`;
+            card.innerHTML = `
+                <div class="alert-header">
+                    <span>${payload.type} AI ALERT #${payload.id}</span>
+                    <span>${timeStr}</span>
+                </div>
+                <div class="alert-trigger"><i class="fa fa-exclamation-triangle"></i> ${payload.trigger}</div>
+                <div class="alert-message">${payload.message}</div>
+                <div class="alert-footer">
+                    <span class="tag tag-district"><i class="fa fa-map-marker-alt"></i> ${payload.district}</span>
+                    <span class="tag tag-action"><i class="fa fa-check-circle"></i> Executed: ${payload.action}</span>
+                </div>
+            `;
+            const container = document.getElementById('alertsContainer');
+            container.insertBefore(card, container.firstChild);
+
+            // Inject Timeline
+            const tl = document.createElement('div');
+            tl.className = 'timeline-item';
+            tl.innerHTML = `
+                <div class="tl-time">${timeStr}</div>
+                <div class="tl-text">AI executed outbox task: <b>${payload.action}</b> (${payload.type}) for ${payload.district}.</div>
+            `;
+            const tContainer = document.getElementById('timelineContainer');
+            tContainer.insertBefore(tl, tContainer.firstChild);
+        }
+    });
+}
+</script>
+{% endblock %}

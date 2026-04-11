@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="kn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrishiMitraAI | ಪ್ರವೇಶ / Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #2ECC71; --green-d: #1a9e52; --green-deep: #0d4f28;
+            --bg: #0a1f14; --card: rgba(255,255,255,0.05);
+            --border: rgba(255,255,255,0.12); --text: #ffffff; --muted: #8fb8a0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 1rem;
+            background-image: radial-gradient(circle at 10% 20%, rgba(46,204,113,0.12) 0%, transparent 40%),
+                              radial-gradient(circle at 90% 80%, rgba(46,204,113,0.08) 0%, transparent 40%);
+        }
+
+        .wrap { width: 100%; max-width: 480px; }
+
+        /* ── BRAND ── */
+        .brand {
+            text-align: center; margin-bottom: 1.5rem;
+        }
+        .brand-icon {
+            font-size: 3.5rem; display: block; margin-bottom: 0.4rem;
+            filter: drop-shadow(0 0 20px rgba(46,204,113,0.5));
+        }
+        .brand-name {
+            font-size: 1.6rem; font-weight: 800;
+            background: linear-gradient(135deg, #2ECC71, #f1c40f);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .brand-sub { font-size: 0.85rem; color: var(--muted); margin-top: 2px; }
+
+        /* ── VOICE GUIDE BUTTON ── */
+        .voice-guide-btn {
+            width: 100%; padding: 0.85rem; margin-bottom: 1rem;
+            background: linear-gradient(135deg, rgba(46,204,113,0.15), rgba(46,204,113,0.05));
+            border: 1.5px solid rgba(46,204,113,0.4);
+            border-radius: 16px; color: #2ECC71;
+            font-family: inherit; font-size: 1rem; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center;
+            justify-content: center; gap: 10px;
+            transition: all 0.3s;
+        }
+        .voice-guide-btn:hover { background: rgba(46,204,113,0.2); }
+        .voice-guide-btn.speaking { animation: pulse-border 1s infinite; }
+        @keyframes pulse-border {
+            0%,100% { box-shadow: 0 0 0 0 rgba(46,204,113,0.5); }
+            50% { box-shadow: 0 0 0 8px rgba(46,204,113,0); }
+        }
+
+        /* ── MODE TOGGLE TABS ── */
+        .mode-tabs {
+            display: grid; grid-template-columns: 1fr 1fr;
+            background: rgba(0,0,0,0.3); border-radius: 16px; padding: 5px;
+            margin-bottom: 1.5rem; gap: 5px;
+        }
+        .mode-tab {
+            padding: 0.85rem; border-radius: 12px; border: none;
+            background: transparent; color: var(--muted);
+            font-family: inherit; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .mode-tab.active {
+            background: var(--green); color: #fff;
+            box-shadow: 0 4px 15px rgba(46,204,113,0.35);
+        }
+        .mode-tab .tab-icon { font-size: 1.3rem; }
+
+        /* ── CARD ── */
+        .card {
+            background: var(--card); backdrop-filter: blur(16px);
+            border: 1px solid var(--border); border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+        }
+
+        /* ── FLASH ── */
+        .flash-wrap { margin-bottom: 1rem; }
+        .flash {
+            padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.88rem;
+            font-weight: 600; margin-bottom: 0.5rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .flash.success { background: rgba(46,204,113,0.15); border-left: 4px solid #2ECC71; color: #2ECC71; }
+        .flash.danger  { background: rgba(231,76,60,0.15);  border-left: 4px solid #e74c3c;  color: #ff8a80; }
+
+        /* ── FORM ELEMENTS ── */
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; color: var(--muted); font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        .form-label .lbl-icon { font-size: 1.2rem; }
+        input[type="text"], input[type="email"], input[type="password"],
+        input[type="tel"], input[type="number"], select {
+            width: 100%; padding: 0.95rem 1rem;
+            background: rgba(0,0,0,0.25);
+            border: 1.5px solid var(--border);
+            border-radius: 13px; color: #fff;
+            font-size: 1.05rem; font-family: inherit;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input:focus, select:focus {
+            outline: none; border-color: var(--green);
+            box-shadow: 0 0 0 3px rgba(46,204,113,0.2);
+        }
+        input::placeholder { color: #4a7a5c; }
+
+        select option { background: #0d2818; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            width: 100%; padding: 1rem;
+            background: var(--green); color: #fff; border: none;
+            border-radius: 14px; font-size: 1.1rem; font-weight: 700;
+            font-family: inherit; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(46,204,113,0.35);
+            transition: all 0.3s;
+        }
+        .btn:hover { background: var(--green-d); transform: translateY(-2px); }
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--green); color: var(--green);
+            box-shadow: none;
+        }
+        .btn-outline:hover { background: rgba(46,204,113,0.1); transform: none; }
+        .flex-btns { display: flex; gap: 0.75rem; }
+
+        /* ── PHONE DISPLAY (PIN mode) ── */
+        .phone-display {
+            background: rgba(0,0,0,0.3); border: 1.5px solid var(--border);
+            border-radius: 13px; padding: 0.9rem 1rem;
+            font-size: 1.3rem; font-weight: 700; letter-spacing: 2px;
+            color: white; text-align: center; margin-bottom: 1rem;
+            min-height: 56px; display: flex; align-items: center; justify-content: center;
+        }
+        .phone-display.placeholder { color: #4a7a5c; font-size: 1rem; font-weight: 500; letter-spacing: 0; }
+
+        /* ── PIN DOTS ── */
+        .pin-display {
+            display: flex; justify-content: center; gap: 18px;
+            margin: 1.2rem 0;
+        }
+        .pin-dot {
+            width: 22px; height: 22px; border-radius: 50%;
+            border: 2.5px solid rgba(46,204,113,0.5);
+            background: transparent; transition: all 0.2s;
+        }
+        .pin-dot.filled {
+            background: var(--green);
+            border-color: var(--green);
+            box-shadow: 0 0 10px rgba(46,204,113,0.6);
+        }
+        .pin-dot.error { border-color: #e74c3c; background: #e74c3c; }
+
+        /* ── DIAL PAD ── */
+        .dialpad {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 12px; margin-bottom: 1.2rem;
+        }
+        .dial-btn {
+            background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+            border-radius: 16px; padding: 1.1rem 0;
+            font-size: 1.8rem; font-weight: 800; color: white;
+            cursor: pointer; font-family: inherit;
+            transition: all 0.15s; user-select: none;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 2px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .dial-btn sub { font-size: 0.55rem; color: var(--muted); font-weight: 600; letter-spacing: 1px; }
+        .dial-btn:active, .dial-btn.pressed {
+            background: rgba(46,204,113,0.25);
+            border-color: var(--green);
+            transform: scale(0.93);
+        }
+        .dial-btn.del-btn { font-size: 1.4rem; color: #ff8a80; }
+        .dial-btn.zero { grid-column: 2; }
+
+        /* ── SECTION TITLE ── */
+        .section-title {
+            font-size: 1.2rem; font-weight: 800; margin-bottom: 1.2rem;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* ── DIVIDER ── */
+        .divider {
+            display: flex; align-items: center; gap: 10px;
+            color: var(--muted); font-size: 0.8rem; margin: 1rem 0;
+        }
+        .divider::before, .divider::after {
+            content: ''; flex: 1; height: 1px; background: var(--border);
+        }
+
+        /* ── TOGGLE LINK ── */
+        .toggle-link {
+            text-align: center; display: block; margin-top: 1.2rem;
+            color: var(--muted); font-size: 0.88rem; text-decoration: none;
+        }
+        .toggle-link b { color: var(--green); }
+        .toggle-link:hover b { text-decoration: underline; }
+
+        /* ── WIZARD STEPS ── */
+        .wizard-step { display: none; animation: fadeIn 0.35s ease; }
+        .wizard-step.active { display: block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+        .progress-bar {
+            display: flex; justify-content: space-between;
+            position: relative; margin-bottom: 2rem;
+        }
+        .progress-bar::before {
+            content: ''; position: absolute; top: 50%; left: 0; right: 0;
+            height: 2px; background: var(--border); z-index: 1;
+        }
+        .step-dot {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: #162b1e; border: 2px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 2; font-size: 0.9rem; font-weight: 800;
+            color: var(--muted); transition: all 0.3s;
+        }
+        .step-dot.active {
+            background: var(--green); border-color: var(--green); color: #fff;
+            box-shadow: 0 0 12px rgba(46,204,113,0.5);
+        }
+
+        /* ── HELP TIP ── */
+        .help-tip {
+            background: rgba(46,204,113,0.08); border: 1px solid rgba(46,204,113,0.2);
+            border-radius: 12px; padding: 0.75rem 1rem;
+            font-size: 0.82rem; color: #6fcf97; margin-bottom: 1rem;
+            display: flex; align-items: flex-start; gap: 8px; line-height: 1.5;
+        }
+        .help-tip .hi { font-size: 1.1rem; flex-shrink: 0; }
+
+        /* ── PHONE INPUT group ── */
+        .phone-input-row { display: flex; gap: 8px; }
+        .phone-prefix {
+            background: rgba(0,0,0,0.3); border: 1.5px solid var(--border);
+            border-radius: 13px; padding: 0 14px;
+            color: var(--muted); font-size: 1rem; font-weight: 700;
+            display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+        }
+        .phone-input-row input { flex: 1; }
+
+        @media (max-width: 420px) {
+            .card { padding: 1.4rem; }
+            .dial-btn { padding: 0.9rem 0; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrap">
+    <!-- Brand -->
+    <div class="brand">
+        <span class="brand-icon">🌾</span>
+        <div class="brand-name">KrishiMitraAI</div>
+        <div class="brand-sub">ನಿಮ್ಮ ಕೃಷಿ ಮಿತ್ರ · Your Smart Farming Companion</div>
+    </div>
+
+    <!-- Voice Guide Button -->
+    <button class="voice-guide-btn" id="voiceGuideBtn" onclick="speakGuide()">
+        <span style="font-size:1.4rem;">🔊</span>
+        <span>ಸೂಚನೆ ಕೇಳಿ / Hear Instructions</span>
+    </button>
+
+    <!-- NEW: Voice Input Magic Button (For extreme accessibility) -->
+    <button class="voice-guide-btn" id="micBtn" onclick="startVoiceLogin()" style="background: linear-gradient(135deg, rgba(241, 196, 15, 0.2), rgba(243, 156, 18, 0.1)); border-color: rgba(241, 196, 15, 0.5); color: #f1c40f; margin-bottom: 1.5rem; height: 65px; box-shadow: 0 0 15px rgba(241, 196, 15, 0.1);">
+        <span style="font-size:1.6rem;" id="micIcon">🎙️</span>
+        <span id="micText">ಮಾತನಾಡಿ ಸಂಖ್ಯೆ ಹೇಳಿ / Speak Number</span>
+    </button>
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+        <button class="mode-tab active" id="tabPin" onclick="switchMode('pin')">
+            <span class="tab-icon">🔢</span> PIN Login<br>
+            <small style="font-size:0.68rem;opacity:0.7;">Easy • No typing</small>
+        </button>
+        <button class="mode-tab" id="tabStd" onclick="switchMode('standard')">
+            <span class="tab-icon">📧</span> Standard Login<br>
+            <small style="font-size:0.68rem;opacity:0.7;">Email / Password</small>
+        </button>
+    </div>
+
+    <!-- Flash Messages -->
+    <div class="flash-wrap">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">
+                        {{ '✅' if category == 'success' else '❌' }} {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- ════ PIN LOGIN CARD ════ -->
+    <div id="pinCard" class="card">
+        <div class="section-title">📱 ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮತ್ತು PIN</div>
+
+        <div class="help-tip">
+            <span class="hi">💡</span>
+            <div>
+                <strong style="color:#2ECC71;">PIN ಎಂದರೇನು? / What is the PIN?</strong><br>
+                ನಿಮ್ಮ <b>ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯ ಕೊನೆಯ 4 ಅಂಕೆಗಳು</b> ನಿಮ್ಮ PIN.<br>
+                Your PIN = <b>last 4 digits of your mobile number</b>.<br>
+                <span style="display:inline-block;margin-top:6px;background:rgba(46,204,113,0.15);padding:4px 10px;border-radius:8px;font-size:0.9rem;">
+                    📱 Eg: Mobile <b>98765 <u style="color:#2ECC71;">3210</u></b> → PIN = <b style="color:#2ECC71;font-size:1.05rem;">3210</b>
+                </span>
+            </div>
+        </div>
+
+        <!-- Phone Display -->
+        <div class="form-label"><span class="lbl-icon">📞</span> Mobile Number / ಮೊಬೈಲ್ ಸಂಖ್ಯೆ</div>
+        <div class="phone-input-row" style="margin-bottom:1rem;">
+            <div class="phone-prefix">🇮🇳 +91</div>
+            <input type="tel" id="pinPhoneInput" name="phone"
+                   placeholder="ಸಂಖ್ಯೆ ಹಾಕಿ / Enter number"
+                   maxlength="10" inputmode="numeric"
+                   style="font-size:1.2rem;font-weight:700;letter-spacing:1px;"
+                   oninput="this.value=this.value.replace(/\D/g,'')">
+        </div>
+
+        <!-- PIN Dots -->
+        <div class="form-label"><span class="lbl-icon">🔢</span> 4-Digit PIN / 4 ಸಂಖ್ಯೆಯ PIN</div>
+        <div class="pin-display" id="pinDots">
+            <div class="pin-dot" id="dot0"></div>
+            <div class="pin-dot" id="dot1"></div>
+            <div class="pin-dot" id="dot2"></div>
+            <div class="pin-dot" id="dot3"></div>
+        </div>
+
+        <!-- Dial Pad -->
+        <div class="dialpad" id="dialpad">
+            <button class="dial-btn" onclick="dialPress('1')">1<sub>   </sub></button>
+            <button class="dial-btn" onclick="dialPress('2')">2<sub>ABC</sub></button>
+            <button class="dial-btn" onclick="dialPress('3')">3<sub>DEF</sub></button>
+            <button class="dial-btn" onclick="dialPress('4')">4<sub>GHI</sub></button>
+            <button class="dial-btn" onclick="dialPress('5')">5<sub>JKL</sub></button>
+            <button class="dial-btn" onclick="dialPress('6')">6<sub>MNO</sub></button>
+            <button class="dial-btn" onclick="dialPress('7')">7<sub>PRS</sub></button>
+            <button class="dial-btn" onclick="dialPress('8')">8<sub>TUV</sub></button>
+            <button class="dial-btn" onclick="dialPress('9')">9<sub>WXY</sub></button>
+            <button class="dial-btn zero" onclick="dialPress('0')">0</button>
+            <button class="dial-btn del-btn" onclick="dialDelete()">⌫</button>
+        </div>
+
+        <!-- Hidden PIN input for form -->
+        <input type="hidden" id="pinHidden" name="pin" value="">
+
+        <button class="btn" id="pinSubmitBtn" onclick="submitPin()" style="font-size:1.15rem; padding:1.1rem;">
+            🌾 ಪ್ರವೇಶಿಸಿ / Enter Farm
+        </button>
+
+        <div class="divider">or / ಅಥವಾ</div>
+        <a href="{{ url_for('auth.register') }}" style="display:block; text-align:center; color: var(--muted); font-size: 0.88rem; text-decoration:none;">
+            ನೊಂದಣಿ ಇಲ್ಲವೇ? / New farmer? <b style="color:#2ECC71;">Join here →</b>
+        </a>
+    </div>
+
+    <!-- ════ STANDARD LOGIN CARD ════ -->
+    <div id="stdCard" class="card" style="display:none;">
+        {% if mode == 'login' %}
+        <!-- Standard Login -->
+        <div class="section-title">🔐 Sign In</div>
+        <form action="{{ url_for('auth.login') }}" method="POST">
+            <div class="form-group">
+                <div class="form-label"><span class="lbl-icon">📞</span> Phone or Email</div>
+                <input type="text" name="email" required placeholder="+91 9876543210 or email@example.com">
+            </div>
+            <div class="form-group">
+                <div class="form-label"><span class="lbl-icon">🔑</span> Password</div>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="btn">Sign In →</button>
+        </form>
+        <a href="{{ url_for('auth.register') }}" class="toggle-link">New to KrishiMitraAI? <b>Start your journey</b></a>
+
+        {% else %}
+        <!-- Registration Wizard -->
+        <div class="section-title">🌱 Join KrishiMitraAI</div>
+        <div class="progress-bar">
+            <div class="step-dot active" id="dot-1">1</div>
+            <div class="step-dot" id="dot-2">2</div>
+            <div class="step-dot" id="dot-3">3</div>
+        </div>
+
+        <form action="{{ url_for('auth.register') }}" method="POST" id="registerForm">
+
+            <!-- STEP 1 -->
+            <div class="wizard-step active" id="step-1">
+                <div class="help-tip">
+                    <span class="hi">💡</span>
+                    <span>ನಿಮ್ಮ ಹೆಸರು ಮತ್ತು ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಹಾಕಿ. Enter name & phone.</span>
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">👤</span> Full Name / ಹೆಸರು</div>
+                    <input type="text" name="name" required placeholder="e.g. Raju Krishna">
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">📞</span> Phone / ಮೊಬೈಲ್</div>
+                    <input type="tel" name="phone" required placeholder="+91 9876543210">
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">📧</span> Email (Optional)</div>
+                    <input type="email" name="email" placeholder="example@gmail.com">
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">🔑</span> Password</div>
+                    <input type="password" name="password" required placeholder="Choose a strong password">
+                </div>
+                <button type="button" class="btn" onclick="nextStep(2)">Next: Farm Details ➡️</button>
+            </div>
+
+            <!-- STEP 2 -->
+            <div class="wizard-step" id="step-2">
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">📍</span> District / ಜಿಲ್ಲೆ</div>
+                    <select name="location_district" required>
+                        <option value="">Select your district</option>
+                        <option>Mysuru</option><option>Mandya</option><option>Hassan</option>
+                        <option>Tumkur</option><option>Belagavi</option><option>Dharwad</option>
+                        <option>Haveri</option><option>Shivamogga</option><option>Chitradurga</option>
+                        <option>Bengaluru Rural</option><option>Bengaluru Urban</option>
+                        <option>Pune</option><option>Nashik</option><option>Nagpur</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">🏞️</span> Farm Size (Acres)</div>
+                    <input type="number" step="0.1" name="farm_size" placeholder="e.g. 3.5">
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">🌱</span> Main Crops / ಬೆಳೆ</div>
+                    <input type="text" name="primary_crops" placeholder="e.g. Ragi, Sugarcane, Paddy">
+                </div>
+                <div class="flex-btns">
+                    <button type="button" class="btn btn-outline" onclick="prevStep(1)">⬅️ Back</button>
+                    <button type="button" class="btn" onclick="nextStep(3)">Next ➡️</button>
+                </div>
+            </div>
+
+            <!-- STEP 3 -->
+            <div class="wizard-step" id="step-3">
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">🗣️</span> Language / ಭಾಷೆ</div>
+                    <select name="language">
+                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                        <option value="hi">हिन्दी (Hindi)</option>
+                        <option value="mr">मराठी (Marathi)</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div class="form-label"><span class="lbl-icon">🔔</span> Alert Preference</div>
+                    <select name="communication_pref">
+                        <option value="voice">📞 Voice Call Alerts (Best for farmers)</option>
+                        <option value="sms">💬 SMS Alerts</option>
+                        <option value="web">🌐 Web Dashboard Only</option>
+                    </select>
+                </div>
+                <div class="flex-btns">
+                    <button type="button" class="btn btn-outline" onclick="prevStep(2)">⬅️ Back</button>
+                    <button type="submit" class="btn">🚀 Complete Setup</button>
+                </div>
+            </div>
+        </form>
+        <a href="{{ url_for('auth.login') }}" class="toggle-link">Already registered? <b>Sign In</b></a>
+        {% endif %}
+    </div>
+
+</div><!-- /wrap -->
+
+<script>
+    // ── MODE SWITCH ──
+    const modeKey = 'loginMode';
+    function switchMode(mode) {
+        const isPin = mode === 'pin';
+        document.getElementById('pinCard').style.display = isPin ? 'block' : 'none';
+        document.getElementById('stdCard').style.display = isPin ? 'none' : 'block';
+        document.getElementById('tabPin').classList.toggle('active', isPin);
+        document.getElementById('tabStd').classList.toggle('active', !isPin);
+        localStorage.setItem(modeKey, mode);
+        speak(isPin
+            ? 'ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಹಾಕಿ ನಂತರ PIN ಒತ್ತಿ'
+            : 'Email ಮತ್ತು Password ಹಾಕಿ');
+    }
+    // Restore last mode
+    window.addEventListener('DOMContentLoaded', () => {
+        const saved = localStorage.getItem(modeKey) || 'pin';
+        switchMode(saved);
+    });
+
+    // ── VOICE SPEECH ──
+    function speak(text, lang = 'kn-IN') {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang; u.rate = 0.88; u.pitch = 1.05; u.volume = 1;
+        window.speechSynthesis.speak(u);
+    }
+    function speakGuide() {
+        const btn = document.getElementById('voiceGuideBtn');
+        const isPinMode = document.getElementById('pinCard').style.display !== 'none';
+        btn.classList.add('speaking');
+        const msg = isPinMode
+            ? 'ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಹಾಕಿ. ನಿಮ್ಮ PIN ಎಂದರೆ ನಿಮ್ಮ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯ ಕೊನೆಯ ನಾಲ್ಕು ಅಂಕೆಗಳು. ಉದಾಹರಣೆಗೆ, ನಿಮ್ಮ ಸಂಖ್ಯೆ 9876543210 ಆಗಿದ್ದರೆ, PIN 3210. ಅಂಕೆಗಳನ್ನು ಒತ್ತಿ ನಂತರ ಹಸಿರು ಬಟನ್ ಒತ್ತಿ.'
+            : 'Please enter your phone number or email and then your password. Then tap the Sign In button.';
+        speak(msg);
+        setTimeout(() => btn.classList.remove('speaking'), 6000);
+    }
+
+    // ── VOICE MAGIC LOGIN ──
+    function startVoiceLogin() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert('Your browser does not support Voice Login. Please type your number.');
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'kn-IN'; // Listen in Kannada
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        const micBtn = document.getElementById('micBtn');
+        const micIcon = document.getElementById('micIcon');
+        const micText = document.getElementById('micText');
+
+        micIcon.textContent = '🔴';
+        micText.textContent = 'ಕೇಳಿಸಿಕೊಳ್ಳಲಾಗುತ್ತಿದೆ... / Listening...';
+        micBtn.classList.add('speaking');
+        speak('ನಿಮ್ಮ ಹತ್ತು ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ಹೇಳಿ'); // Speak "Say your 10 digit number"
+
+        setTimeout(() => {
+            recognition.start();
+        }, 2000);
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            
+            // Extract numbers from Kannada or English text
+            // Kannada numbers dict map just in case, but Google speech usually maps to digits natively.
+            let digits = speechResult.replace(/\D/g,''); 
+            
+            if (digits.length >= 10) {
+                digits = digits.slice(-10); // get last 10
+                document.getElementById('pinPhoneInput').value = digits;
+                speak('ಸಂಖ್ಯೆ ದಾಖಲಾಯಿತು. ಈಗ ನಿಮ್ಮ PIN ಒತ್ತಿ.'); 
+                micIcon.textContent = '✅';
+                micText.textContent = 'Number Captured!';
+            } else {
+                speak('ಕ್ಷಮಿಸಿ, ಸಂಖ್ಯೆ ಅರ್ಥವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಹೇಳಿ.');
+                micIcon.textContent = '⚠️';
+                micText.textContent = 'Could not catch number / Try again';
+            }
+        };
+
+        recognition.onspeechend = function() {
+            recognition.stop();
+        };
+
+        recognition.onerror = function(event) {
+            micIcon.textContent = '🎙️';
+            micText.textContent = 'ಮಾತನಾಡಿ ಸಂಖ್ಯೆ ಹೇಳಿ / Speak Number';
+            micBtn.classList.remove('speaking');
+        };
+
+        recognition.onend = function() {
+            micBtn.classList.remove('speaking');
+            setTimeout(() => {
+                if(micIcon.textContent !== '✅') {
+                    micIcon.textContent = '🎙️';
+                    micText.textContent = 'ಮಾತನಾಡಿ ಸಂಖ್ಯೆ ಹೇಳಿ / Speak Number';
+                }
+            }, 3000);
+        };
+    }
+
+    // ── PIN DIAL PAD ──
+    let pinValue = '';
+
+    // Audio context for haptic-like sound feedback
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playClickSound(freq = 600, type = 'sine', duration = 0.05) {
+        try {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    function dialPress(digit) {
+        if (pinValue.length >= 4) return;
+        pinValue += digit;
+        updatePinDots();
+        
+        // Speak the digit for accessibility
+        speak(digit);
+        
+        // Play click sound
+        playClickSound(800, 'sine', 0.06);
+
+        // Haptic feedback (mobile)
+        if (navigator.vibrate) navigator.vibrate(30);
+        
+        // Auto-submit when 4 digits entered
+        if (pinValue.length === 4) {
+            document.getElementById('pinHidden').value = pinValue;
+            setTimeout(() => {
+                speak('PIN ದಾಖಲಾಯಿತು. ಪ್ರವೇಶಿಸುತ್ತಿದ್ದೇವೆ.');
+            }, 500);
+        }
+    }
+    function dialDelete() {
+        if (pinValue.length === 0) return;
+        pinValue = pinValue.slice(0, -1);
+        updatePinDots();
+        
+        speak('ಅಳಿಸಲಾಗಿದೆ'); // Speak "Deleted" in Kannada
+        playClickSound(400, 'square', 0.1); 
+
+        if (navigator.vibrate) navigator.vibrate([10, 10, 10]);
+    }
+    function updatePinDots() {
+        for (let i = 0; i < 4; i++) {
+            const dot = document.getElementById('dot' + i);
+            dot.classList.toggle('filled', i < pinValue.length);
+            dot.classList.remove('error');
+        }
+        document.getElementById('pinHidden').value = pinValue;
+    }
+
+    function submitPin() {
+        const phone = document.getElementById('pinPhoneInput').value.trim();
+        const pin = pinValue;
+
+        if (!phone || phone.length < 10) {
+            speak('ದಯವಿಟ್ಟು ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಹಾಕಿ');
+            document.getElementById('pinPhoneInput').focus();
+            document.getElementById('pinPhoneInput').style.borderColor = '#e74c3c';
+            return;
+        }
+        if (pin.length !== 4) {
+            speak('ದಯವಿಟ್ಟು ನಾಲ್ಕು ಅಂಕಿಯ PIN ಒತ್ತಿ');
+            for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.add('error');
+            return;
+        }
+
+        // Submit via fetch
+        const btn = document.getElementById('pinSubmitBtn');
+        btn.textContent = '⏳ Verifying...';
+        btn.disabled = true;
+
+        fetch('{{ url_for("auth.login_pin") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: '+91' + phone, pin: pin })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                speak('ಸ್ವಾಗತ! ನಿಮ್ಮ ತೋಟಕ್ಕೆ ಸ್ವಾಗತ.');
+                btn.textContent = '✅ Welcome! Redirecting...';
+                setTimeout(() => { window.location.href = data.redirect; }, 800);
+            } else {
+                speak(data.message || 'ತಪ್ಪಾದ PIN. ಮತ್ತೊಮ್ಮೆ ಪ್ರಯತ್ನಿಸಿ.');
+                btn.textContent = '❌ ' + (data.message || 'Wrong PIN — Try Again');
+                btn.disabled = false;
+                pinValue = '';
+                updatePinDots();
+                for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.add('error');
+                setTimeout(() => {
+                    btn.textContent = '🌾 ಪ್ರವೇಶಿಸಿ / Enter Farm';
+                    for (let i = 0; i < 4; i++) document.getElementById('dot' + i).classList.remove('error');
+                }, 3000);
+            }
+        })
+        .catch(() => {
+            btn.textContent = '⚠️ Error — Try again';
+            btn.disabled = false;
+        });
+    }
+
+    // ── WIZARD NAVIGATION ──
+    function nextStep(step) {
+        document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-' + step).classList.add('active');
+        document.getElementById('dot-' + step).classList.add('active');
+    }
+    function prevStep(step) {
+        document.querySelectorAll('.wizard-step').forEach(el => el.classList.remove('active'));
+        document.getElementById('step-' + step).classList.add('active');
+        document.getElementById('dot-' + (step + 1)).classList.remove('active');
+    }
+
+    // Dial pad touch feedback animation
+    document.querySelectorAll('.dial-btn').forEach(btn => {
+        btn.addEventListener('touchstart', () => btn.classList.add('pressed'), { passive: true });
+        btn.addEventListener('touchend', () => btn.classList.remove('pressed'), { passive: true });
+    });
+</script>
+</body>
+</html>

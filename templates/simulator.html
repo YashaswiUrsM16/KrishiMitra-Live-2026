@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% block title %}Future Farm Simulator | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sim-container {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        font-family: 'Outfit', sans-serif;
+        box-sizing: border-box;
+    }
+    @media (max-width: 1024px) {
+        .sim-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .config-panel {
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(45, 106, 79, 0.08);
+        border: 1px solid #e8f5e9;
+    }
+    .config-panel h2 {
+        color: #1b4332;
+        font-size: 1.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+    }
+    .form-group {
+        margin-bottom: 1.2rem;
+    }
+    .form-group label {
+        display: block;
+        color: #52796f;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid #c7e0d4;
+        border-radius: 12px;
+        background: #f9fdfa;
+        font-family: 'Outfit';
+        font-size: 1rem;
+        color: #1b4332;
+        transition: 0.3s;
+    }
+    .form-control:focus { outline: none; border-color: #74c69d; background: #fff; }
+
+    .btn-simulate {
+        width: 100%;
+        background: linear-gradient(135deg, #2ECC71, #27AE60);
+        color: white;
+        border: none;
+        padding: 15px;
+        border-radius: 14px;
+        font-size: 1.1rem;
+        font-weight: 800;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(46, 204, 113, 0.3);
+        transition: transform 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 1rem;
+    }
+    .btn-simulate:hover { transform: translateY(-2px); }
+
+    .results-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    
+    .loading-state {
+        display: none;
+        background: #ffffff;
+        border-radius: 24px;
+        padding: 4rem 2rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        border: 1px solid #e8f5e9;
+    }
+    .loader {
+        border: 4px solid #f3f3f3; border-top: 4px solid #2ECC71; border-radius: 50%;
+        width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 0 auto 1.5rem auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .results-content { display: none; }
+
+    .ai-insight {
+        background: linear-gradient(135deg, #1b4332, #2d6a4f);
+        color: white;
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(27, 67, 50, 0.2);
+    }
+    .ai-insight h3 { font-size: 1.3rem; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+    .ai-insight p { font-size: 1.05rem; line-height: 1.6; color: #d8f3dc; }
+
+    .scenario-grid {
+        display: grid; 
+        grid-template-columns: 1fr 1fr; 
+        gap: 1.5rem; 
+    }
+    @media (max-width: 768px) {
+        .scenario-grid { grid-template-columns: 1fr; gap: 1rem; }
+        .scenario-card { padding: 1.25rem; }
+        .sc-header { font-size: 1.3rem; }
+        .sim-container { padding: 1rem; }
+    }
+    .scenario-card {
+        background: #ffffff;
+        border-radius: 20px;
+        padding: 2rem;
+        border: 1px solid #e8f5e9;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+        position: relative;
+        overflow: hidden;
+    }
+    .winner-badge {
+        position: absolute; top: 0; right: 0;
+        background: #fca311; color: #fff;
+        padding: 5px 15px; border-bottom-left-radius: 15px;
+        font-weight: 800; font-size: 0.8rem; text-transform: uppercase;
+        display: none;
+    }
+    .scenario-card.winner { border: 2px solid #2ECC71; }
+    .scenario-card.winner .winner-badge { display: block; }
+
+    .sc-header { font-size: 1.6rem; font-weight: 800; color: #0a2e1a; margin-bottom: 1.5rem; border-bottom: 2px solid #e8f5e9; padding-bottom: 15px;}
+    .sc-metric {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 0; border-bottom: 1px dashed #e8f5e9; flex-wrap: wrap; word-break: break-word; gap: 8px;
+    }
+    .sc-metric-label { color: #2d6a4f; font-weight: 700; font-size: 0.95rem; }
+    .sc-metric-val { color: #1b4332; font-weight: 800; font-size: 1.05rem; text-align: right; max-width: 100%; }
+    .sc-metric-val.profit { color: #27AE60; font-size: 1.3rem; background: #e8f5e9; padding: 4px 12px; border-radius: 8px;}
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sim-container fade-in">
+    <!-- Configuration -->
+    <div class="config-panel">
+        <h2>Matrix Simulator 🌍</h2>
+        <form id="simForm">
+            <div class="form-group">
+                <label>Location (District)</label>
+                <input type="text" class="form-control" id="loc" required value="{{ user.profile.location_district if user.profile else 'Mandya, India' }}">
+            </div>
+            <div class="form-group">
+                <label>Soil Type</label>
+                <select class="form-control" id="soil" required>
+                    <option value="Red Soil">Red Soil</option>
+                    <option value="Black Soil">Black Soil</option>
+                    <option value="Alluvial Soil">Alluvial Soil</option>
+                    <option value="Sandy Soil">Sandy Soil</option>
+                </select>
+            </div>
+            
+            <hr style="border:0; border-top:1px solid #eee; margin: 1.5rem 0;">
+
+            <div class="form-group">
+                <label>Primary Scenario (Crop 1)</label>
+                <input type="text" class="form-control" id="crop1" required placeholder="e.g. Maize">
+            </div>
+            <div class="form-group">
+                <label>Alternative Scenario (Crop 2, Optional)</label>
+                <input type="text" class="form-control" id="crop2" placeholder="e.g. Cotton">
+            </div>
+
+            <hr style="border:0; border-top:1px solid #eee; margin: 1.5rem 0;">
+
+            <div class="form-group">
+                <label>Irrigation Methodology</label>
+                <select class="form-control" id="irrigation" required>
+                    <option value="Drip Irrigation">Drip Irrigation</option>
+                    <option value="Sprinkler">Sprinkler</option>
+                    <option value="Flood / Traditional">Flood / Traditional</option>
+                    <option value="Rainfed">Rainfed</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Fertilizer Strategy</label>
+                <select class="form-control" id="fert" required>
+                    <option value="Chemical NPK Heavy">Chemical NPK Heavy</option>
+                    <option value="Organic / Vermicompost">100% Organic</option>
+                    <option value="Mixed Integrated">Mixed / Integrated</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn-simulate" id="btnSim"><i class="fa fa-microchip"></i> Run Simulation Engine</button>
+        </form>
+    </div>
+
+    <!-- Results Panel -->
+    <div class="results-panel">
+        <div class="loading-state" id="loadingState">
+            <div class="loader"></div>
+            <h2 style="color: #1b4332;">Synthesizing Futures...</h2>
+            <p style="color: #52796f; margin-top: 10px;">Computing yield logic, local climate trajectories, and financial matrices.</p>
+        </div>
+
+        <div class="results-content" id="resultsContent">
+            <!-- AI Insight -->
+            <div class="ai-insight">
+                <h3><i class="fa fa-lightbulb"></i> Predictive Strategy Engine</h3>
+                <p id="aiRecText">Loading insights...</p>
+            </div>
+
+            <!-- VS Cards -->
+            <div class="scenario-grid" id="scCardsContainer">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('simForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const payload = {
+            location: document.getElementById('loc').value,
+            soil: document.getElementById('soil').value,
+            crop1: document.getElementById('crop1').value,
+            crop2: document.getElementById('crop2').value || "Traditional Base",
+            irrigation: document.getElementById('irrigation').value,
+            fertilizer: document.getElementById('fert').value
+        };
+
+        const btn = document.getElementById('btnSim');
+        const loading = document.getElementById('loadingState');
+        const content = document.getElementById('resultsContent');
+        
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing...';
+        btn.disabled = true;
+        loading.style.display = 'block';
+        content.style.display = 'none';
+
+        fetch('/api/simulate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.innerHTML = '<i class="fa fa-microchip"></i> Run Simulation Engine';
+            btn.disabled = false;
+            loading.style.display = 'none';
+            
+            if(data.status === 'success') {
+                content.style.display = 'block';
+                renderScenarios(data.data);
+            } else {
+                alert("Simulation failed: " + data.message);
+            }
+        })
+        .catch(err => {
+            btn.innerHTML = '<i class="fa fa-microchip"></i> Run Simulation Engine';
+            btn.disabled = false;
+            loading.style.display = 'none';
+            alert("Network Error");
+        });
+    });
+
+    function renderScenarios(data) {
+        document.getElementById('aiRecText').innerText = data.recommendation;
+        
+        const container = document.getElementById('scCardsContainer');
+        container.innerHTML = '';
+        
+        // Find winner based on score
+        let maxScore = -1;
+        let winnerIndex = 0;
+        data.scenarios.forEach((sc, i) => {
+            if(sc.score > maxScore) { maxScore = sc.score; winnerIndex = i; }
+        });
+
+        data.scenarios.forEach((sc, i) => {
+            const isWinner = (i === winnerIndex);
+            
+            const card = document.createElement('div');
+            card.className = `scenario-card ${isWinner ? 'winner' : ''}`;
+            
+            card.innerHTML = `
+                <div class="winner-badge">Optimal Choice</div>
+                <div class="sc-header">${sc.crop}</div>
+                
+                <div class="sc-metric">
+                    <span class="sc-metric-label">Yield Prediction</span>
+                    <span class="sc-metric-val">${sc.expected_yield}</span>
+                </div>
+                <div class="sc-metric">
+                    <span class="sc-metric-label">Financial Profit</span>
+                    <span class="sc-metric-val profit">${sc.profit_estimation}</span>
+                </div>
+                <div class="sc-metric">
+                    <span class="sc-metric-label">Water Intake Risk</span>
+                    <span class="sc-metric-val">${sc.water_usage}</span>
+                </div>
+                <div class="sc-metric">
+                    <span class="sc-metric-label">Pest Probability</span>
+                    <span class="sc-metric-val">${sc.pest_risk_level}</span>
+                </div>
+                <div class="sc-metric">
+                    <span class="sc-metric-label">Climate Resilience</span>
+                    <span class="sc-metric-val" style="font-size:0.9rem;">${sc.weather_impact}</span>
+                </div>
+                <div class="sc-metric" style="border:none; margin-top: 10px; background: rgba(46, 204, 113, 0.1); padding: 15px; border-radius: 12px;">
+                    <span class="sc-metric-label" style="color: #2D6A4F; font-weight:800;">Sim Score</span>
+                    <span class="sc-metric-val" style="color: #2D6A4F; font-size: 1.5rem;">${sc.score}/100</span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+{% block title %}Market Prices — KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+.market-page { font-family:'Inter',sans-serif; }
+
+/* ── HERO ── */
+.market-hero {
+  background: #e8f5e9;
+  border-radius: 24px;
+  padding: 2rem 2.5rem;
+  color: #1b4332;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.market-hero::before {
+  content:'📊';
+  position:absolute;
+  font-size:10rem;
+  right:-1rem;top:-2rem;
+  opacity:0.05;
+}
+.market-hero-left {}
+.market-hero-title { font-size:1.6rem;font-weight:900;letter-spacing:-0.5px; }
+.market-hero-sub   { font-size:0.85rem;color:#52796f;margin-top:4px; }
+.market-hero-right {
+  display:flex;
+  gap:1rem;
+  position:relative;
+  z-index:2;
+}
+.market-stat {
+  background:rgba(45, 106, 79, 0.05);
+  border:1px solid rgba(45, 106, 79, 0.1);
+  border-radius:14px;
+  padding:1rem 1.5rem;
+  text-align:center;
+  backdrop-filter:blur(10px);
+}
+.market-stat-val { font-size:1.5rem;font-weight:900; }
+.market-stat-lbl { font-size:0.68rem;opacity:0.65;margin-top:2px; }
+
+/* ── LIVE TICKER ── */
+.ticker-wrap {
+  background: white;
+  border-radius: 14px;
+  border: 1.5px solid #e8f5e9;
+  padding: 0.75rem 1.2rem;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ticker-label {
+  background: #2d6a4f;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.ticker-dot {
+  width:7px;height:7px;
+  background:#74c69d;
+  border-radius:50%;
+  animation:blink 1.5s infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.ticker-scroll {
+  flex:1;
+  overflow:hidden;
+  white-space:nowrap;
+}
+.ticker-inner {
+  display:inline-block;
+  animation:ticker 30s linear infinite;
+  font-size:0.82rem;
+  color:#1b4332;
+  font-weight:500;
+}
+@keyframes ticker{
+  0%{transform:translateX(0)}
+  100%{transform:translateX(-50%)}
+}
+.ticker-item { display:inline-block;margin-right:2.5rem; }
+.t-up   { color:#2d6a4f;font-weight:700; }
+.t-down { color:#e63946;font-weight:700; }
+
+/* ── CONTROLS ── */
+.controls-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+.search-box {
+  display:flex;
+  align-items:center;
+  gap:0.75rem;
+  background:white;
+  border:1.5px solid #e8f5e9;
+  border-radius:12px;
+  padding:0.5rem 1rem;
+  transition:all 0.2s;
+}
+.search-box:focus-within { border-color:#2d6a4f;box-shadow:0 0 0 3px rgba(45,106,79,0.08); }
+.search-icon { font-size:1rem;color:#b0c4ba; }
+.search-input {
+  flex:1;
+  border:none;
+  outline:none;
+  font-family:'Inter',sans-serif;
+  font-size:0.88rem;
+  color:#1b4332;
+  background:transparent;
+}
+.search-input::placeholder { color:#b0c4ba; }
+.state-select {
+  padding:12px 16px;
+  border:1.5px solid #e8f5e9;
+  border-radius:12px;
+  font-family:'Inter',sans-serif;
+  font-size:0.85rem;
+  color:#1b4332;
+  background:white;
+  outline:none;
+  cursor:pointer;
+  min-width:180px;
+}
+.state-select:focus { border-color:#2d6a4f; }
+
+/* ── CATEGORY TABS ── */
+.cat-tabs {
+  display:flex;
+  gap:0.5rem;
+  flex-wrap:wrap;
+  margin-bottom:1.5rem;
+}
+.cat-tab {
+  padding:8px 18px;
+  border-radius:10px;
+  border:1.5px solid #e8f5e9;
+  background:white;
+  color:#52796f;
+  font-weight:600;
+  font-size:0.82rem;
+  cursor:pointer;
+  font-family:'Inter',sans-serif;
+  transition:all 0.2s;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.cat-tab:hover { border-color:#74c69d;color:#1b4332;background:#f0faf4; }
+.cat-tab.active {
+  background:linear-gradient(135deg,#1b4332,#2d6a4f);
+  color:white;
+  border-color:transparent;
+  box-shadow:0 4px 12px rgba(45,106,79,0.25);
+}
+
+/* ── PRICE GRID ── */
+#priceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.price-card {
+  background: white;
+  border-radius: 18px;
+  padding: 1.2rem;
+  border: 1.5px solid #e8f5e9;
+  transition: all 0.25s;
+  cursor: default;
+  position: relative;
+  overflow: hidden;
+}
+.price-card::before {
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  border-radius:18px 18px 0 0;
+}
+.price-card.up::before   { background:linear-gradient(90deg,#2d6a4f,#74c69d); }
+.price-card.down::before { background:linear-gradient(90deg,#e63946,#f4a261); }
+.price-card.same::before { background:linear-gradient(90deg,#f4a261,#fdd835); }
+.price-card:hover {
+  border-color:#b7e4c7;
+  transform:translateY(-4px);
+  box-shadow:0 12px 32px rgba(45,106,79,0.12);
+}
+
+.price-card-top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:0.75rem;
+}
+.price-icon { font-size:2rem; }
+.state-chip {
+  background:#f0faf4;
+  color:#2d6a4f;
+  padding:3px 10px;
+  border-radius:8px;
+  font-size:0.68rem;
+  font-weight:700;
+}
+
+.price-name {
+  font-size:0.88rem;
+  font-weight:700;
+  color:#0a2e1a;
+  margin-bottom:0.5rem;
+  line-height:1.3;
+}
+
+.price-val {
+  font-size:1.4rem;
+  font-weight:900;
+  color:#1b4332;
+  letter-spacing:-0.5px;
+  line-height:1;
+}
+.price-unit { font-size:0.72rem;color:#52796f;font-weight:400;margin-left:3px; }
+
+.price-change {
+  display:flex;
+  align-items:center;
+  gap:4px;
+  margin-top:0.5rem;
+  font-size:0.78rem;
+  font-weight:700;
+  padding:4px 10px;
+  border-radius:8px;
+  width:fit-content;
+}
+.change-up   { background:#d8f3dc;color:#1b4332; }
+.change-down { background:#ffe0e0;color:#7d0000; }
+.change-same { background:#fff3cd;color:#856404; }
+
+/* ── NO RESULTS ── */
+.no-results {
+  text-align:center;
+  padding:4rem 2rem;
+  background:white;
+  border-radius:20px;
+  border:1.5px dashed #b7e4c7;
+}
+
+@media(max-width:768px) {
+  .market-hero { flex-direction:column; gap:1.5rem; padding: 1.5rem; text-align: center; }
+  .market-hero::before { font-size: 6rem; }
+  .market-hero-right { flex-direction: column; width:100%; gap: 0.75rem; }
+  .market-stat { padding: 0.75rem; width: 100%; display: flex; align-items: center; justify-content: space-between; }
+  .market-stat-val { font-size: 1.2rem; }
+  
+  .controls-row { grid-template-columns:1fr; gap: 0.75rem; }
+  .state-select { width: 100%; min-width: 0; }
+  
+  .cat-tabs { gap: 0.4rem; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 0.5rem; scrollbar-width: none; }
+  .cat-tabs::-webkit-scrollbar { display: none; }
+  .cat-tab { white-space: nowrap; padding: 6px 14px; }
+  
+  #priceGrid { grid-template-columns: 1fr; }
+}
+
+@media(max-width: 480px) {
+  #priceGrid { grid-template-columns: 1fr; }
+  .market-hero-title { font-size: 1.3rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="market-page">
+
+  <!-- Hero -->
+  <div class="market-hero">
+    <div class="market-hero-left">
+      <div class="market-hero-title">📊 KrishiMitra Marketplace</div>
+      <div class="market-hero-sub">Real-time agricultural commodity rates — updated live from national mandis</div>
+    </div>
+    <div class="market-hero-right">
+      <div class="market-stat">
+        <div class="market-stat-val" id="dateDisplay">--</div>
+        <div class="market-stat-lbl">Trading Date</div>
+      </div>
+      <div class="market-stat">
+        <div class="market-stat-val">35+</div>
+        <div class="market-stat-lbl">Commodities</div>
+      </div>
+      <div class="market-stat">
+        <div class="market-stat-val" id="lastTime">--</div>
+        <div class="market-stat-lbl">Live Sync</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Ticker -->
+  <div class="ticker-wrap">
+    <div class="ticker-label">
+      <div class="ticker-dot"></div>
+      LIVE
+    </div>
+    <div class="ticker-scroll">
+      <div class="ticker-inner" id="tickerInner"></div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-row">
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="searchInput"
+             placeholder="Search commodity... e.g. Wheat, Tomato, Onion"
+             oninput="filterPrices()"/>
+    </div>
+    <select class="state-select" id="stateSelect" onchange="filterPrices()">
+      <option value="">🗺️ All States</option>
+      <option>Maharashtra</option>
+      <option>Punjab</option>
+      <option>Uttar Pradesh</option>
+      <option>Madhya Pradesh</option>
+      <option>Gujarat</option>
+      <option>Karnataka</option>
+      <option>Rajasthan</option>
+      <option>Andhra Pradesh</option>
+      <option>Kerala</option>
+    </select>
+  </div>
+
+  <!-- Category Tabs -->
+  <div class="cat-tabs">
+    <button class="cat-tab active" onclick="filterCategory('all',this)">🌾 All (35+)</button>
+    <button class="cat-tab" onclick="filterCategory('grain',this)">🌾 Grains</button>
+    <button class="cat-tab" onclick="filterCategory('vegetable',this)">🥦 Vegetables</button>
+    <button class="cat-tab" onclick="filterCategory('fruit',this)">🍎 Fruits</button>
+    <button class="cat-tab" onclick="filterCategory('pulse',this)">🫘 Pulses</button>
+    <button class="cat-tab" onclick="filterCategory('spice',this)">🌶️ Spices</button>
+  </div>
+
+  <!-- Price Grid -->
+  <div id="priceGrid"></div>
+
+  <!-- No Results -->
+  <div id="noResults" style="display:none;">
+    <div class="no-results">
+      <div style="font-size:3rem;margin-bottom:1rem;">🔍</div>
+      <div style="font-size:1rem;font-weight:700;color:#1b4332;margin-bottom:4px;">
+        No results found!
+      </div>
+      <div style="font-size:0.85rem;color:#52796f;">
+        Try a different search term or filter
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const marketData = [
+  { name:'Wheat',         icon:'🌾', price:2150,  unit:'quintal', change:+50,  category:'grain',     state:'Punjab' },
+  { name:'Rice / Paddy',  icon:'🍚', price:3200,  unit:'quintal', change:-30,  category:'grain',     state:'Maharashtra' },
+  { name:'Maize / Corn',  icon:'🌽', price:1850,  unit:'quintal', change:+20,  category:'grain',     state:'Uttar Pradesh' },
+  { name:'Barley',        icon:'🌿', price:1650,  unit:'quintal', change:0,    category:'grain',     state:'Rajasthan' },
+  { name:'Pearl Millet',  icon:'🌾', price:2100,  unit:'quintal', change:+80,  category:'grain',     state:'Gujarat' },
+  { name:'Jowar / Sorghum',icon:'🌾',price:2800,  unit:'quintal', change:-20,  category:'grain',     state:'Maharashtra' },
+  { name:'Cotton',        icon:'🌸', price:6800,  unit:'quintal', change:-100, category:'grain',     state:'Maharashtra' },
+  { name:'Sugarcane',     icon:'🎋', price:350,   unit:'quintal', change:+10,  category:'grain',     state:'Uttar Pradesh' },
+  { name:'Tomato',        icon:'🍅', price:25,    unit:'kg',      change:-5,   category:'vegetable', state:'Maharashtra' },
+  { name:'Potato',        icon:'🥔', price:18,    unit:'kg',      change:+3,   category:'vegetable', state:'Uttar Pradesh' },
+  { name:'Onion',         icon:'🧅', price:22,    unit:'kg',      change:+8,   category:'vegetable', state:'Maharashtra' },
+  { name:'Cauliflower',   icon:'🥦', price:30,    unit:'kg',      change:-10,  category:'vegetable', state:'Punjab' },
+  { name:'Cabbage',       icon:'🥬', price:15,    unit:'kg',      change:+2,   category:'vegetable', state:'Karnataka' },
+  { name:'Brinjal',       icon:'🍆', price:20,    unit:'kg',      change:0,    category:'vegetable', state:'Madhya Pradesh' },
+  { name:'Okra / Bhindi', icon:'🌿', price:35,    unit:'kg',      change:+5,   category:'vegetable', state:'Gujarat' },
+  { name:'Spinach',       icon:'🥬', price:20,    unit:'kg',      change:-3,   category:'vegetable', state:'Punjab' },
+  { name:'Bitter Gourd',  icon:'🌿', price:40,    unit:'kg',      change:+10,  category:'vegetable', state:'Maharashtra' },
+  { name:'Green Peas',    icon:'🫛', price:45,    unit:'kg',      change:-8,   category:'vegetable', state:'Uttar Pradesh' },
+  { name:'Mango',         icon:'🥭', price:80,    unit:'kg',      change:+15,  category:'fruit',     state:'Maharashtra' },
+  { name:'Banana',        icon:'🍌', price:30,    unit:'dozen',   change:-5,   category:'fruit',     state:'Karnataka' },
+  { name:'Apple',         icon:'🍎', price:120,   unit:'kg',      change:+20,  category:'fruit',     state:'Punjab' },
+  { name:'Grapes',        icon:'🍇', price:65,    unit:'kg',      change:-10,  category:'fruit',     state:'Maharashtra' },
+  { name:'Watermelon',    icon:'🍉', price:15,    unit:'kg',      change:+5,   category:'fruit',     state:'Rajasthan' },
+  { name:'Pomegranate',   icon:'🍎', price:90,    unit:'kg',      change:+30,  category:'fruit',     state:'Maharashtra' },
+  { name:'Chickpea',      icon:'🫘', price:5200,  unit:'quintal', change:+100, category:'pulse',     state:'Madhya Pradesh' },
+  { name:'Red Lentil',    icon:'🫘', price:6800,  unit:'quintal', change:-50,  category:'pulse',     state:'Uttar Pradesh' },
+  { name:'Moong Dal',     icon:'🫘', price:7200,  unit:'quintal', change:+200, category:'pulse',     state:'Rajasthan' },
+  { name:'Urad Dal',      icon:'🫘', price:6500,  unit:'quintal', change:-100, category:'pulse',     state:'Madhya Pradesh' },
+  { name:'Soybean',       icon:'🫘', price:4200,  unit:'quintal', change:+80,  category:'pulse',     state:'Maharashtra' },
+  { name:'Turmeric',      icon:'🌿', price:8500,  unit:'quintal', change:+500, category:'spice',     state:'Maharashtra' },
+  { name:'Red Chilli',    icon:'🌶️', price:9000,  unit:'quintal', change:-200, category:'spice',     state:'Andhra Pradesh' },
+  { name:'Garlic',        icon:'🧄', price:120,   unit:'kg',      change:+25,  category:'spice',     state:'Madhya Pradesh' },
+  { name:'Ginger',        icon:'🫚', price:85,    unit:'kg',      change:-10,  category:'spice',     state:'Kerala' },
+  { name:'Coriander Seed',icon:'🌿', price:7500,  unit:'quintal', change:+300, category:'spice',     state:'Rajasthan' },
+  { name:'Cumin / Jeera', icon:'🌿', price:22000, unit:'quintal', change:+800, category:'spice',     state:'Gujarat' },
+  { name:'Mustard',       icon:'🌼', price:5100,  unit:'quintal', change:+150, category:'spice',     state:'Rajasthan' },
+];
+
+let currentCategory = 'all';
+
+// Build ticker
+function buildTicker() {
+  const top10 = marketData.slice(0, 12);
+  const html  = top10.map(item => {
+    const cls  = item.change > 0 ? 't-up' : item.change < 0 ? 't-down' : '';
+    const arr  = item.change > 0 ? '▲' : item.change < 0 ? '▼' : '━';
+    const abs  = Math.abs(item.change);
+    return `<span class="ticker-item">
+      ${item.icon} <strong>${item.name}</strong>
+      ₹${item.price.toLocaleString()}/${item.unit}
+      <span class="${cls}">${arr} ₹${abs}</span>
+    </span>`;
+  }).join('');
+  const inner = document.getElementById('tickerInner');
+  inner.innerHTML = html + html; // duplicate for seamless loop
+}
+
+function renderPrices(data) {
+  const grid      = document.getElementById('priceGrid');
+  const noResults = document.getElementById('noResults');
+
+  if (data.length === 0) {
+    grid.innerHTML        = '';
+    noResults.style.display = 'block';
+    return;
+  }
+  noResults.style.display = 'none';
+
+  grid.innerHTML = data.map(item => {
+    const isUp   = item.change > 0;
+    const isDown = item.change < 0;
+    const cardCls    = isUp ? 'up'  : isDown ? 'down'  : 'same';
+    const changeCls  = isUp ? 'change-up' : isDown ? 'change-down' : 'change-same';
+    const changeIcon = isUp ? '▲' : isDown ? '▼' : '━';
+    const changeAbs  = Math.abs(item.change);
+
+    return `
+      <div class="price-card ${cardCls}">
+        <div class="price-card-top">
+          <span class="price-icon">${item.icon}</span>
+          <span class="state-chip">${item.state}</span>
+        </div>
+        <div class="price-name">${item.name}</div>
+        <div>
+          <span class="price-val">₹${item.price.toLocaleString()}</span>
+          <span class="price-unit">/${item.unit}</span>
+        </div>
+        <div class="price-change ${changeCls}">
+          ${changeIcon} ₹${changeAbs} today
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterCategory(cat, btn) {
+  currentCategory = cat;
+  document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterPrices();
+}
+
+function filterPrices() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const state  = document.getElementById('stateSelect').value;
+  const filtered = marketData.filter(item => {
+    const matchCat    = currentCategory === 'all' || item.category === currentCategory;
+    const matchSearch = item.name.toLowerCase().includes(search);
+    const matchState  = !state || item.state === state;
+    return matchCat && matchSearch && matchState;
+  });
+  renderPrices(filtered);
+}
+
+// Init
+const now = new Date();
+document.getElementById('dateDisplay').textContent =
+  now.toLocaleDateString('en-IN',{day:'numeric',month:'short'});
+document.getElementById('lastTime').textContent =
+  now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+
+buildTicker();
+renderPrices(marketData);
+</script>
+{% endblock %}

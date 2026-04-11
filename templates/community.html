@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Voice Community | CropSense AI{% endblock %}
+
+{% block extra_css %}
+<style>
+.comm-container { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+.title-box h1 { font-size: 2.2rem; color: #0a2e1a; font-weight: 800; }
+.title-box p { color: #52796f; font-size: 1rem; }
+
+.record-btn {
+    background: linear-gradient(135deg, #1b4332, #2d6a4f);
+    color: white; border: none; padding: 15px 30px; border-radius: 30px; font-weight: 800; font-size: 1.1rem; cursor: pointer; transition: 0.3s;
+    box-shadow: 0 10px 20px rgba(27,67,50,0.3); display: flex; align-items: center; gap: 10px;
+}
+.record-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(27,67,50,0.4); }
+
+.feed-column { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.post-card { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 5px 20px rgba(0,0,0,0.03); position: relative; }
+.post-header { display: flex; align-items: center; gap: 15px; margin-bottom: 1rem; }
+.avatar { width: 50px; height: 50px; background: #e8f5e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+.user-info { flex: 1; }
+.user-name { font-weight: 800; color: #2b2d42; font-size: 1.1rem; }
+.user-meta { color: #adb5bd; font-size: 0.85rem; }
+
+.audio-box { background: #f8f9fa; border-radius: 10px; padding: 15px; display: flex; align-items: center; gap: 15px; margin-bottom: 1rem; cursor: pointer; }
+.play-btn { width: 40px; height: 40px; background: #2d6a4f; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.wave-mock { flex: 1; height: 30px; background: repeating-linear-gradient(90deg, #74c69d 0, #74c69d 4px, transparent 4px, transparent 8px); opacity: 0.5; }
+
+.transl-box { border-left: 4px solid #ced4da; padding-left: 15px; margin-bottom: 1.5rem; }
+.native-txt { font-weight: 700; color: #1b4332; margin-bottom: 5px; font-size: 1.05rem; }
+.en-txt { color: #6c757d; font-size: 0.95rem; font-style: italic; }
+
+.ai-insight { background: #f0faf4; padding: 10px 15px; border-radius: 10px; font-size: 0.85rem; color: #2d6a4f; font-weight: 600; display:flex; align-items:center; gap:8px;}
+.tags-row { margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+.ctag { background: #e9ecef; padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; color: #495057; }
+
+/* ── MOBILE OPTIMIZATIONS ── */
+@media (max-width: 768px) {
+    .comm-container { padding: 1rem; }
+    .header-row { flex-direction: column; text-align: center; gap: 1.5rem; }
+    .record-btn { width: 100%; justify-content: center; }
+    .title-box h1 { font-size: 1.8rem; }
+    .post-card { padding: 1.25rem; }
+    .avatar { width: 44px; height: 44px; font-size: 1.2rem; }
+    .user-name { font-size: 1rem; }
+    .native-txt { font-size: 0.95rem; }
+    .en-txt { font-size: 0.85rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="comm-container fade-in">
+    <div class="header-row">
+        <div class="title-box">
+            <h1>Voice Community Network</h1>
+            <p>Peer-to-peer knowledge sharing, translated by AI.</p>
+        </div>
+        <button class="record-btn" onclick="alert('Demo: Microphone access requested.')"><i class="fa fa-microphone"></i> Broadcast Voice Note</button>
+    </div>
+
+    <div class="feed-column" id="feedList">
+        <div style="text-align:center; padding: 3rem;"><i class="fa fa-spinner fa-spin fa-2x" style="color:#74c69d;"></i></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+window.onload = function() {
+    fetch('/api/community_feed')
+    .then(r => r.json())
+    .then(res => {
+        const c = document.getElementById('feedList');
+        c.innerHTML = '';
+        res.data.forEach(p => {
+            const tagsHtml = p.tags.map(t => `<span class="ctag">#${t}</span>`).join('');
+            
+            const card = document.createElement('div');
+            card.className = 'post-card';
+            card.innerHTML = `
+                <div class="post-header">
+                    <div class="avatar">👨🏽‍🌾</div>
+                    <div class="user-info">
+                        <div class="user-name">${p.farmer}</div>
+                        <div class="user-meta"><i class="fa fa-map-marker-alt"></i> ${p.district} &bull; ${p.timestamp}</div>
+                    </div>
+                </div>
+                
+                <div class="audio-box" onclick="this.querySelector('.play-btn').innerHTML='<i class=\\'fa fa-pause\\'></i>'">
+                    <div class="play-btn"><i class="fa fa-play"></i></div>
+                    <div class="wave-mock"></div>
+                </div>
+
+                <div class="transl-box">
+                    <div class="native-txt">"${p.transcript_local}"</div>
+                    <div class="en-txt">Translation: "${p.transcript_translated}"</div>
+                </div>
+
+                <div class="ai-insight"><i class="fa fa-robot"></i> ${p.ai_insight}</div>
+                
+                <div class="tags-row">${tagsHtml}</div>
+            `;
+            c.appendChild(card);
+        });
+    });
+}
+</script>
+{% endblock %}

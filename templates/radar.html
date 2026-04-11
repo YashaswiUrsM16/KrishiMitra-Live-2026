@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Disease Radar | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+.radar-container { padding: 2rem; max-width: 1200px; margin: 0 auto; height:calc(100vh - 62px); display:flex; flex-direction:column; }
+.header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+.title-box h1 { font-size: 2.2rem; color: #0a2e1a; font-weight: 800; }
+.title-box p { color: #52796f; font-size: 1rem; }
+
+.content-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; flex: 1; min-height:0; }
+
+#map { border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; height: 100%; z-index: 1;}
+
+.side-panel { background: white; border-radius: 20px; padding: 2rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); overflow-y:auto; }
+.panel-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 1.5rem; color: #1b4332; }
+
+.district-card { background: #f8f9fa; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; transition: 0.3s; border-left: 5px solid #2d6a4f; cursor:pointer;}
+.district-card:hover { transform: translateX(5px); }
+.district-card.critical { border-left-color: #e63946; background: #fff0f1; }
+.district-card.warning { border-left-color: #fca311; background: #fffdf5; }
+
+.d-name { font-weight: 800; color: #2b2d42; font-size: 1.1rem; margin-bottom: 5px; }
+.d-disease { color: #6c757d; font-size: 0.9rem; margin-bottom: 8px; }
+.d-cases { font-weight: 700; font-size: 0.85rem; color: #e63946; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="radar-container fade-in">
+    <div class="header-row">
+        <div class="title-box">
+            <h1>Disease Early-Warning Radar</h1>
+            <p>Live regional anomaly tracking & heatmap visualization</p>
+        </div>
+        <button class="nav-btn" style="background:#2d6a4f;color:white;" onclick="loadRadarData()"><i class="fa fa-satellite-dish"></i> Ping Satellites</button>
+    </div>
+
+    <div class="content-grid">
+        <div id="map"></div>
+        
+        <div class="side-panel">
+            <div class="panel-title">Active Hotspots</div>
+            <div id="hotspotList"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map;
+let markers = [];
+
+function initMap() {
+    map = L.map('map').setView([12.9716, 77.5946], 7); // Center on Karnataka
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    loadRadarData();
+}
+
+function loadRadarData() {
+    fetch('/api/radar_data')
+    .then(r => r.json())
+    .then(res => {
+        // Clear old markers
+        markers.forEach(m => map.removeLayer(m));
+        markers = [];
+        
+        const listContainer = document.getElementById('hotspotList');
+        listContainer.innerHTML = '';
+
+        res.data.forEach(d => {
+            // Add Marker
+            const circle = L.circle([d.lat, d.lng], {
+                color: d.cases > 50 ? 'red' : 'orange',
+                fillColor: d.cases > 50 ? '#f03' : '#f9a826',
+                fillOpacity: 0.5,
+                radius: d.cases * 300 // Scale radius by cases
+            }).addTo(map);
+            
+            circle.bindPopup(`<b>${d.name}</b><br>Disease: ${d.disease}<br>Severity: ${d.cases} cases estimated.`);
+            markers.push(circle);
+
+            // Add Sidebar Card
+            const card = document.createElement('div');
+            card.className = `district-card ${d.cases > 50 ? 'critical' : 'warning'}`;
+            card.onclick = () => { map.setView([d.lat, d.lng], 10); circle.openPopup(); };
+            card.innerHTML = `
+                <div class="d-name">${d.name}</div>
+                <div class="d-disease"><i class="fa fa-bug"></i> ${d.disease}</div>
+                <div class="d-cases">${d.cases} Active High-Risk Warnings</div>
+            `;
+            listContainer.appendChild(card);
+        });
+    });
+}
+window.onload = initMap;
+</script>
+{% endblock %}

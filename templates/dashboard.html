@@ -1,0 +1,737 @@
+{% extends "base.html" %}
+{% block title %}Mission Control | KrishiMitraAI{% endblock %}
+
+{% block extra_css %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  * { font-family: 'Inter', sans-serif; }
+
+  :root {
+    --emerald: #10b981;
+    --emerald-dark: #059669;
+    --emerald-deep: #064e3b;
+    --amber: #f59e0b;
+    --rose: #f43f5e;
+    --sky: #0ea5e9;
+    --violet: #8b5cf6;
+    --slate-50: #f8fafc;
+    --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0;
+    --slate-400: #94a3b8;
+    --slate-600: #475569;
+    --slate-700: #334155;
+    --slate-900: #0f172a;
+  }
+
+  .dash-wrap { max-width: 1400px; }
+
+  /* ── HERO GREETING ── */
+  .hero-greeting {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 40%, #0f766e 100%);
+    border-radius: 28px;
+    padding: 2.5rem 3rem;
+    color: white;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 25px 50px rgba(6, 78, 59, 0.3);
+  }
+  .hero-greeting::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 50%;
+  }
+  .hero-greeting::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; right: 200px;
+    width: 250px; height: 250px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 50%;
+  }
+  .hero-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .hero-tag { background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; display: inline-block; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.15); }
+  .hero-name { font-size: 2.8rem; font-weight: 900; margin: 0; line-height: 1.1; letter-spacing: -1px; }
+  .hero-sub { font-size: 1rem; opacity: 0.7; margin-top: 0.5rem; font-weight: 400; }
+  
+  .hero-weather-pill {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+  }
+  .weather-pill-temp { font-size: 2.5rem; font-weight: 900; line-height: 1; }
+  .weather-pill-detail { font-size: 0.8rem; opacity: 0.8; }
+
+  .hero-quick-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+  .hqs-item { display: flex; align-items: center; gap: 0.6rem; }
+  .hqs-val { font-size: 1.3rem; font-weight: 900; }
+  .hqs-label { font-size: 0.75rem; opacity: 0.65; font-weight: 500; }
+
+  @media (max-width: 768px) {
+    .dash-wrap { padding: 0.5rem; }
+    .hero-greeting { padding: 1.5rem; border-radius: 20px; }
+    .hero-top { flex-direction: column; gap: 1.5rem; }
+    .hero-name { font-size: 1.8rem; }
+    .hero-weather-pill { padding: 0.75rem 1rem; width: 100%; justify-content: space-between; }
+    .weather-pill-temp { font-size: 1.8rem; }
+    .hero-quick-stats { flex-wrap: wrap; gap: 1rem; }
+    .hqs-item { width: calc(50% - 0.5rem); }
+    .hqs-val { font-size: 1.1rem; }
+  }
+
+  /* ── BENTO GRID ── */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.5rem;
+  }
+
+  .bento-card {
+    background: white;
+    border-radius: 24px;
+    padding: 1.75rem;
+    border: 1px solid var(--slate-200);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.03);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  .bento-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05), 0 20px 40px rgba(0,0,0,0.08);
+    border-color: rgba(16, 185, 129, 0.2);
+  }
+
+  .col-3 { grid-column: span 3; }
+  .col-4 { grid-column: span 4; }
+  .col-6 { grid-column: span 6; }
+  .col-8 { grid-column: span 8; }
+  .col-12 { grid-column: span 12; }
+
+  /* ── STAT CARD STYLES ── */
+  .stat-icon {
+    width: 52px; height: 52px;
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+  }
+  .bg-emerald { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .bg-amber { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+  .bg-rose { background: linear-gradient(135deg, #ffe4e6, #fecdd3); }
+  .bg-sky { background: linear-gradient(135deg, #e0f2fe, #bae6fd); }
+  .bg-violet { background: linear-gradient(135deg, #ede9fe, #ddd6fe); }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--slate-900);
+    letter-spacing: -0.5px;
+    line-height: 1;
+    margin-bottom: 0.3rem;
+  }
+  .stat-label { font-size: 0.8rem; color: var(--slate-400); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-top: 0.75rem;
+  }
+  .trend-up { background: #d1fae5; color: #059669; }
+  .trend-down { background: #ffe4e6; color: #e11d48; }
+  .trend-neutral { background: #f1f5f9; color: #64748b; }
+
+  /* ── SECTION TITLES ── */
+  .card-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--slate-700);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title-action {
+    margin-left: auto;
+    font-size: 0.75rem;
+    color: var(--emerald);
+    font-weight: 700;
+    text-decoration: none;
+    display: flex; align-items: center; gap: 4px;
+    transition: 0.2s;
+  }
+  .card-title-action:hover { color: var(--emerald-dark); }
+
+  /* ── CROP HISTORY LIST ── */
+  .crop-list-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .crop-list-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .crop-emoji-icon {
+    width: 44px; height: 44px;
+    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+  }
+  .crop-name { font-weight: 700; color: var(--slate-700); font-size: 0.95rem; }
+  .crop-meta { font-size: 0.75rem; color: var(--slate-400); margin-top: 2px; }
+  .crop-score {
+    margin-left: auto;
+    background: linear-gradient(135deg, #064e3b, #065f46);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  /* ── ACTIONS GRID ── */
+  .quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1.25rem;
+    border-radius: 18px;
+    background: var(--slate-50);
+    border: 1.5px solid var(--slate-200);
+    text-decoration: none;
+    color: var(--slate-700);
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+    transition: all 0.25s;
+    cursor: pointer;
+  }
+  .quick-action:hover { background: #f0fdf4; border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1); }
+  .quick-action .qa-icon { font-size: 1.8rem; }
+
+  /* ── ACTIVITY FEED ── */
+  .activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 0.9rem 0;
+    border-bottom: 1px solid var(--slate-100);
+    align-items: flex-start;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; flex-shrink: 0;
+  }
+  .activity-title { font-size: 0.85rem; font-weight: 700; color: var(--slate-700); }
+  .activity-meta { font-size: 0.75rem; color: var(--slate-400); margin-top: 2px; }
+  .activity-time { margin-left: auto; font-size: 0.7rem; color: var(--slate-400); flex-shrink: 0; }
+
+  /* ── FINANCE MINI CARD ── */
+  .finance-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid var(--slate-100);
+  }
+  .finance-row:last-child { border-bottom: none; }
+  .f-cat { font-size: 0.85rem; font-weight: 600; color: var(--slate-700); display: flex; align-items: center; gap: 0.5rem; }
+  .f-amount { font-weight: 800; font-size: 0.9rem; }
+
+  /* ── TIPS CARD ── */
+  .tip-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--slate-50);
+    border-radius: 14px;
+    margin-bottom: 0.75rem;
+    border-left: 3.5px solid var(--emerald);
+  }
+  .tip-item:last-child { margin-bottom: 0; }
+  .tip-num { font-size: 1.2rem; flex-shrink: 0; }
+  .tip-text { font-size: 0.85rem; color: var(--slate-600); font-weight: 500; line-height: 1.5; }
+
+  /* ── ALERT BANNER ── */
+  .alert-banner {
+    background: linear-gradient(135deg, #fffbeb, #fef3c7);
+    border: 1px solid #fcd34d;
+    border-left: 5px solid #f59e0b;
+    border-radius: 16px;
+    padding: 1.2rem 1.5rem;
+    display: flex; align-items: center; gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .alert-banner .icon { font-size: 1.5rem; }
+  .alert-text strong { color: #92400e; font-size: 0.9rem; display: block; }
+  .alert-text span { color: #78350f; font-size: 0.82rem; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--slate-400);
+  }
+  .empty-state .icon { font-size: 3rem; opacity: 0.2; display: block; margin-bottom: 0.75rem; }
+
+  /* ── NET PROFIT INDICATOR ── */
+  .profit-big {
+    font-size: 2.5rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+    display: block;
+  }
+  .profit-positive { color: #059669; }
+  .profit-negative { color: #e11d48; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1024px) {
+    .col-3 { grid-column: span 6; }
+    .col-4 { grid-column: span 12; }
+    .col-8 { grid-column: span 12; }
+    .col-6 { grid-column: span 12; }
+  }
+
+  @media (max-width: 640px) {
+    .bento-grid { gap: 1rem; }
+    .bento-card { padding: 1.25rem; border-radius: 20px; grid-column: span 12 !important; }
+    .stat-value { font-size: 1.5rem; }
+    .stat-icon { width: 44px; height: 44px; font-size: 1.2rem; }
+    .quick-action .qa-icon { font-size: 1.4rem; }
+    .hero-quick-stats { border-top: 1px solid rgba(255,255,255,0.15); margin-top: 1.5rem; padding-top: 1rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-wrap">
+
+  {# ── HERO BANNER ── #}
+  <div class="hero-greeting">
+    <div class="hero-top">
+      <div>
+        <div class="hero-tag">🌾 KrishiMitraAI Mission Control</div>
+        <h1 class="hero-name">Namaste, {{ (user.name or 'Farmer').split()[0] if (user.name and user.name.strip()) else 'Farmer' }}! 👋</h1>
+        <p class="hero-sub">Welcome back! Here's your farm's vital intelligence check.</p>
+        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+            <button onclick="playMorningBriefing()" id="podcastBtn" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; transition: 0.3s; font-size: 0.85rem;">
+                <i class="fa fa-play-circle" id="podcastIcon"></i> <span id="podcastText">Listen to Morning Briefing 🎙️</span>
+            </button>
+            <button onclick="sendDemoSMS()" id="smsBtn" style="background: rgba(244, 63, 94, 0.4); backdrop-filter: blur(10px); border: 1px solid rgba(244, 63, 94, 0.5); color: white; padding: 10px 20px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: 700; transition: 0.3s; font-size: 0.85rem;">
+                <i class="fa fa-paper-plane" id="smsIcon"></i> <span id="smsText">Send Demo SMS 📱</span>
+            </button>
+        </div>
+      </div>
+      {% if weather_snippet %}
+      <div class="hero-weather-pill">
+        <img src="http://openweathermap.org/img/wn/{{ weather_snippet.icon }}@2x.png" width="56" alt="weather">
+        <div>
+          <div class="weather-pill-temp">{{ weather_snippet.temp }}°C</div>
+          <div class="weather-pill-detail" style="font-weight:700;">{{ weather_snippet.city }}</div>
+          <div class="weather-pill-detail">{{ weather_snippet.desc }}</div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <div class="hero-quick-stats">
+      <div class="hqs-item">
+        <span style="font-size:1.4rem;">🌱</span>
+        <div><div class="hqs-val">{{ total_scans }}</div><div class="hqs-label">Crop Analyses</div></div>
+      </div>
+      <div class="hqs-item">
+        <span style="font-size:1.4rem;">🩺</span>
+        <div><div class="hqs-val">{{ pest_scan_count }}</div><div class="hqs-label">Disease Scans</div></div>
+      </div>
+      <div class="hqs-item">
+        <span style="font-size:1.4rem;">💰</span>
+        <div>
+          <div class="hqs-val">₹{{ '{:,.0f}'.format(net_profit|abs) }}</div>
+          <div class="hqs-label">Net {{ 'Profit' if net_profit >= 0 else 'Loss' }}</div>
+        </div>
+      </div>
+      {% if weather_snippet %}
+      <div class="hqs-item">
+        <span style="font-size:1.4rem;">💧</span>
+        <div><div class="hqs-val">{{ weather_snippet.humidity }}%</div><div class="hqs-label">Humidity</div></div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── MAIN BENTO GRID ── #}
+  <div class="bento-grid">
+
+    {# ── COMMUNITY LEADERSHIP HUB (Admins/Experts only) ── #}
+    {% if managed_farmers %}
+    <div class="bento-card col-12" style="background: linear-gradient(135deg, #fff, #f0fdf4); border: 2px solid var(--emerald); border-radius: 28px;">
+        <div class="card-title" style="color: var(--emerald-deep); font-size: 1.2rem;">
+            👥 Community Management Hub
+            <span class="hero-tag" style="background: var(--emerald); color: white; margin-left: 10px; margin-bottom: 0;">Leadership Active</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--slate-600); margin-bottom: 1.5rem;">Managing <strong>{{ managed_farmers|length }}</strong> farmers who rely on you for digital intervention.</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+            {% for farmer in managed_farmers %}
+            <div style="background: white; border: 1px solid var(--slate-200); border-radius: 20px; padding: 1.25rem; display: flex; align-items: center; gap: 1rem;">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: var(--emerald); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800;">
+                    {{ farmer.name[0]|upper }}
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 800; color: var(--slate-900);">{{ farmer.name }}</div>
+                    <div style="font-size: 0.75rem; color: var(--slate-400);">{{ farmer.phone or 'No Phone' }}</div>
+                </div>
+                <div style="display: flex; gap: 5px;">
+                    <a href="#" title="Voice Help" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: center; text-decoration: none;">📞</a>
+                    <a href="#" title="Diagnostics" style="width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--slate-200); display: flex; align-items: center; justify-content: center; text-decoration: none;">🩺</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── STAT: TOTAL INVESTMENT ── #}
+    <div class="bento-card col-3">
+      <div class="stat-icon bg-rose">💸</div>
+      <div class="stat-label">Total Investment</div>
+      <div class="stat-value">₹{{ '{:,.0f}'.format(total_expense) }}</div>
+      <div class="stat-trend trend-neutral">📊 This Season</div>
+    </div>
+
+    {# ── STAT: HARVEST REVENUE ── #}
+    <div class="bento-card col-3">
+      <div class="stat-icon bg-emerald">🌾</div>
+      <div class="stat-label">Harvest Revenue</div>
+      <div class="stat-value">₹{{ '{:,.0f}'.format(total_income) }}</div>
+      <div class="stat-trend trend-up">↑ Logged Income</div>
+    </div>
+
+    {# ── STAT: NET PROFIT ── #}
+    <div class="bento-card col-3">
+      <div class="stat-icon bg-amber">📈</div>
+      <div class="stat-label">Net Seasonal P&L</div>
+      <div class="stat-value {{ 'profit-positive' if net_profit >= 0 else 'profit-negative' }}">
+        {{ '+' if net_profit >= 0 else '' }}₹{{ '{:,.0f}'.format(net_profit) }}
+      </div>
+      <div class="stat-trend {{ 'trend-up' if net_profit >= 0 else 'trend-down' }}">
+        {{ '🟢 Profitable' if net_profit >= 0 else '🔴 Loss Detected' }}
+      </div>
+    </div>
+
+    {# ── STAT: CROP INTELLIGENCE SCANS ── #}
+    <div class="bento-card col-3">
+      <div class="stat-icon bg-violet">🛰️</div>
+      <div class="stat-label">AI Scans Conducted</div>
+      <div class="stat-value">{{ total_scans + pest_scan_count }}</div>
+      <div class="stat-trend trend-neutral">🌱 {{ total_scans }} Crop · 🩺 {{ pest_scan_count }} Disease</div>
+    </div>
+
+    {# ── QUICK ACTIONS ── #}
+    <div class="bento-card col-4">
+      <div class="card-title">⚡ Quick Actions</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+        <a href="{{ url_for('crop.crop') }}" class="quick-action">
+          <span class="qa-icon">🌱</span>Crop Intel
+        </a>
+        <a href="{{ url_for('pest.pest') }}" class="quick-action">
+          <span class="qa-icon">🩺</span>Diagnose
+        </a>
+        <a href="{{ url_for('weather.weather') }}" class="quick-action">
+          <span class="qa-icon">🌤️</span>Climate
+        </a>
+        <a href="{{ url_for('expense.expense') }}" class="quick-action">
+          <span class="qa-icon">💰</span>Finance
+        </a>
+        <a href="{{ url_for('chat.chatbot') }}" class="quick-action">
+          <span class="qa-icon">🤖</span>AI Advisor
+        </a>
+        <a href="{{ url_for('schemes') }}" class="quick-action">
+          <span class="qa-icon">🏛️</span>Schemes
+        </a>
+      </div>
+    </div>
+
+    {# ── AI TIPS CARD ── #}
+    <div class="bento-card col-8" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: rgba(16,185,129,0.15);">
+      <div class="card-title">💡 Today's Expert Farming Tips</div>
+      <div class="tip-item">
+        <span class="tip-num">🌿</span>
+        <p class="tip-text"><strong>Soil Prep:</strong> Apply 2 tons/acre of well-decomposed FYM before sowing for improved water retention and microbial activity.</p>
+      </div>
+      <div class="tip-item">
+        <span class="tip-num">☀️</span>
+        <p class="tip-text"><strong>Water Management:</strong> Irrigate in early morning (5–7 AM) to minimize evaporation losses and reduce fungal pressure.</p>
+      </div>
+      <div class="tip-item">
+        <span class="tip-num">🛡️</span>
+        <p class="tip-text"><strong>Pest Prevention:</strong> Apply Neem oil spray (5ml/L) as a bio-pesticide during early infestation stages to reduce chemical dependence.</p>
+      </div>
+    </div>
+
+    {# ── RECENT CROP INTELLIGENCE ── #}
+    <div class="bento-card col-6">
+      <div class="card-title">
+        🌱 Recent Crop Intelligence
+        <a href="{{ url_for('crop.crop') }}" class="card-title-action">New Analysis →</a>
+      </div>
+      {% if crops %}
+        {% set emoji_map = {'rice': '🌾', 'wheat': '🍞', 'maize': '🌽', 'cotton': '☁️', 'sugarcane': '🎋', 'mango': '🥭', 'banana': '🍌', 'tomato': '🍅', 'onion': '🧅', 'potato': '🥔'} %}
+        {% for c in crops %}
+        <div class="crop-list-item">
+          <div class="crop-emoji-icon">{{ emoji_map.get(c.crop_name.lower(), '🌱') }}</div>
+          <div>
+            <div class="crop-name">{{ c.crop_name | capitalize }}</div>
+            <div class="crop-meta">{{ c.soil_type }} · {{ c.season }} · {{ c.created_at.strftime('%d %b %Y') }}</div>
+          </div>
+          <div class="crop-score">{{ c.confidence_score | round(1) }}% match</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span class="icon">🛰️</span>
+          <p>No crop analyses yet. Start your first AI scan!</p>
+          <a href="{{ url_for('crop.crop') }}" style="display:inline-block;margin-top:1rem;background:linear-gradient(135deg,#064e3b,#065f46);color:white;padding:10px 20px;border-radius:12px;text-decoration:none;font-weight:700;font-size:0.85rem;">Run Analysis</a>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── FINANCE LEDGER SNAPSHOT ── #}
+    <div class="bento-card col-6">
+      <div class="card-title">
+        💰 Finance Snapshot
+        <a href="{{ url_for('expense.expense') }}" class="card-title-action">View Ledger →</a>
+      </div>
+      {% if expenses %}
+      {% set recent = expenses[-5:] | reverse | list %}
+      {% for e in recent %}
+      <div class="finance-row">
+        <span class="f-cat">
+          <span style="font-size:1.1rem;">{{ '📈' if e.type == 'income' else '📉' }}</span>
+          <span>{{ e.title }}</span>
+        </span>
+        <span class="f-amount" style="color: {{ '#059669' if e.type == 'income' else '#e11d48' }};">
+          {{ '+' if e.type == 'income' else '-' }}₹{{ '{:,.0f}'.format(e.amount) }}
+        </span>
+      </div>
+      {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span class="icon">💳</span>
+          <p>No financial records yet. Start tracking!</p>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── AGRONOMY ALERTS ── #}
+    <div class="bento-card col-6">
+      <div class="card-title">🔔 Proactive Farm Alerts</div>
+      <div class="alert-banner">
+        <span class="icon">🌡️</span>
+        <div class="alert-text">
+          <strong>Pre-Season Advisory</strong>
+          <span>Begin soil testing and nutrient analysis 6 weeks before the Kharif season for optimal yields.</span>
+        </div>
+      </div>
+      <div class="alert-banner" style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border-color: #93c5fd; border-left-color: #3b82f6;">
+        <span class="icon">💧</span>
+        <div class="alert-text" style="color: #1e40af;">
+          <strong style="color:#1e3a8a;">Irrigation Reminder</strong>
+          <span style="color:#1e40af;">Drip irrigation systems should be inspected and cleaned before monsoon onset.</span>
+        </div>
+      </div>
+      <div class="alert-banner" style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-color: #86efac; border-left-color: #22c55e;">
+        <span class="icon">✅</span>
+        <div class="alert-text" style="color: #14532d;">
+          <strong style="color:#14532d;">System Online</strong>
+          <span style="color:#166534;">All KrishiMitraAI modules are active and ready for analysis.</span>
+        </div>
+      </div>
+    </div>
+
+    {# ── VOICE COMMUNITY (visible to ALL farmers) ── #}
+    <div class="bento-card col-6" style="background: linear-gradient(135deg, #fdf4ff, #ede9fe); border: 1.5px solid #c4b5fd;">
+      <div class="card-title" style="color: #5b21b6;">
+        🎙️ Farmer Voice Community
+        <a href="{{ url_for('community.community_dashboard') }}" class="card-title-action" style="color: #7c3aed;">Join Discussion →</a>
+      </div>
+      <p style="font-size:0.82rem; color:#6d28d9; margin-bottom:1.2rem; font-weight:500;">
+        Peer-to-peer knowledge sharing across Karnataka. Hear what farmers near you are saying, translated by AI.
+      </p>
+      <div id="dashCommFeed" style="display:flex; flex-direction:column; gap:0.75rem;">
+        <div style="text-align:center; padding:1rem; color:#94a3b8; font-size:0.82rem;"><i class="fa fa-spinner fa-spin"></i> Loading community posts...</div>
+      </div>
+      <a href="{{ url_for('community.community_dashboard') }}"
+         style="display:block; margin-top:1.25rem; text-align:center; background:linear-gradient(135deg,#5b21b6,#7c3aed); color:white; padding:10px 20px; border-radius:14px; text-decoration:none; font-weight:700; font-size:0.85rem; transition:0.3s;"
+         onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+        📢 Broadcast Your Voice Note
+      </a>
+    </div>
+
+    {# ── PLATFORM NAVIGATION TILES ── #}
+    <div class="bento-card col-6" style="background: linear-gradient(135deg, #0f172a, #1e293b); color: white; border-color: transparent;">
+      <div class="card-title" style="color: rgba(255,255,255,0.9);">🚀 Platform Modules</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <a href="{{ url_for('market') }}" style="text-decoration:none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; display:flex; align-items:center; gap:0.8rem; transition:0.3s;" onmouseover="this.style.background='rgba(16,185,129,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+          <span style="font-size:1.6rem;">📊</span>
+          <div><div style="font-weight:700; color:white; font-size:0.85rem;">Market Prices</div><div style="font-size:0.72rem; color:rgba(255,255,255,0.5);">Commodity rates</div></div>
+        </a>
+        <a href="{{ url_for('schemes') }}" style="text-decoration:none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; display:flex; align-items:center; gap:0.8rem; transition:0.3s;" onmouseover="this.style.background='rgba(245,158,11,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+          <span style="font-size:1.6rem;">🏛️</span>
+          <div><div style="font-weight:700; color:white; font-size:0.85rem;">Govt Schemes</div><div style="font-size:0.72rem; color:rgba(255,255,255,0.5);">PM-KISAN & more</div></div>
+        </a>
+        <a href="{{ url_for('tips') }}" style="text-decoration:none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; display:flex; align-items:center; gap:0.8rem; transition:0.3s;" onmouseover="this.style.background='rgba(139,92,246,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+          <span style="font-size:1.6rem;">💡</span>
+          <div><div style="font-weight:700; color:white; font-size:0.85rem;">Farming Tips</div><div style="font-size:0.72rem; color:rgba(255,255,255,0.5);">Expert knowledge</div></div>
+        </a>
+        <a href="{{ url_for('chat.chatbot') }}" style="text-decoration:none; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 1.2rem; display:flex; align-items:center; gap:0.8rem; transition:0.3s;" onmouseover="this.style.background='rgba(14,165,233,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+          <span style="font-size:1.6rem;">🤖</span>
+          <div><div style="font-weight:700; color:white; font-size:0.85rem;">AI Advisor</div><div style="font-size:0.72rem; color:rgba(255,255,255,0.5);">Ask anything</div></div>
+        </a>
+      </div>
+    </div>
+
+  </div>{# /bento-grid #}
+</div>{# /dash-wrap #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Load community feed preview on dashboard
+fetch('/api/community_feed')
+  .then(r => r.json())
+  .then(res => {
+    const box = document.getElementById('dashCommFeed');
+    if (!box) return;
+    box.innerHTML = '';
+    const posts = res.data.slice(0, 2);
+    posts.forEach(p => {
+      box.innerHTML += `
+        <div style="background:white; border-radius:14px; padding:1rem; border:1px solid #ede9fe; display:flex; gap:0.75rem; align-items:flex-start;">
+          <div style="width:38px;height:38px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0;">👨🏽‍🌾</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:800;font-size:0.82rem;color:#5b21b6;">${p.farmer} <span style="color:#94a3b8;font-weight:500;">· ${p.district}</span></div>
+            <div style="font-size:0.78rem;color:#374151;margin-top:3px;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">"${p.transcript_translated}"</div>
+            <div style="margin-top:6px;font-size:0.72rem;background:#f3e8ff;color:#6d28d9;padding:3px 8px;border-radius:8px;display:inline-block;font-weight:600;">🤖 ${p.ai_insight}</div>
+          </div>
+        </div>`;
+    });
+
+// ─── AI MORNING BRIEFING LOGIC ────────────────────────
+let synth = window.speechSynthesis;
+let isPlaying = false;
+
+async function playMorningBriefing() {
+    const btn = document.getElementById('podcastBtn');
+    const icon = document.getElementById('podcastIcon');
+    const text = document.getElementById('podcastText');
+
+    if (isPlaying) {
+        synth.cancel();
+        isPlaying = false;
+        btn.style.background = "rgba(255,255,255,0.2)";
+        text.innerText = "Listen to Morning Briefing 🎙️";
+        icon.className = "fa fa-play-circle";
+        return;
+    }
+
+    try {
+        btn.style.opacity = "0.7";
+        text.innerText = "Generating Briefing...";
+        icon.className = "fa fa-spinner fa-spin";
+
+        const resp = await fetch('/api/morning-briefing');
+        const data = await resp.json();
+
+        if (data.status === 'success') {
+            const utterance = new SpeechSynthesisUtterance(data.briefing);
+            utterance.rate = 0.9; // Slightly slower for clarity
+            utterance.pitch = 1.0;
+            
+            utterance.onstart = () => {
+                isPlaying = true;
+                btn.style.opacity = "1";
+                btn.style.background = "#e63946";
+                text.innerText = "Stop Briefing";
+                icon.className = "fa fa-stop-circle";
+            };
+
+            utterance.onend = () => {
+                isPlaying = false;
+                btn.style.background = "rgba(255,255,255,0.2)";
+                text.innerText = "Listen to Morning Briefing 🎙️";
+                icon.className = "fa fa-play-circle";
+            };
+
+            synth.speak(utterance);
+        }
+    } catch (e) {
+        console.error(e);
+        text.innerText = "Briefing Unavailable";
+    }
+}
+  })
+  .catch(() => {
+    const box = document.getElementById('dashCommFeed');
+    if (box) box.innerHTML = '<div style="text-align:center;padding:1rem;color:#94a3b8;font-size:0.82rem;">Community feed unavailable</div>';
+  });
+async function sendDemoSMS() {
+    const btn = document.getElementById('smsBtn');
+    const icon = document.getElementById('smsIcon');
+    const text = document.getElementById('smsText');
+
+    try {
+        btn.style.opacity = "0.7";
+        text.innerText = "Sending SMS...";
+        icon.className = "fa fa-spinner fa-spin";
+
+        const resp = await fetch('/api/send-demo-sms', { method: 'POST' });
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+            text.innerText = "SMS Sent! ✅";
+            icon.className = "fa fa-check-circle";
+            btn.style.background = "#10b981";
+        } else {
+            text.innerText = "Error: Config Missing";
+            icon.className = "fa fa-exclamation-triangle";
+            btn.style.background = "#e11d48";
+            console.error(res.message);
+        }
+    } catch (e) {
+        text.innerText = "Service Down";
+    } finally {
+        setTimeout(() => {
+            btn.style.opacity = "1";
+            btn.style.background = "rgba(244, 63, 94, 0.4)";
+            text.innerText = "Send Demo SMS 📱";
+            icon.className = "fa fa-paper-plane";
+        }, 3000);
+    }
+}
+</script>
+{% endblock %}
