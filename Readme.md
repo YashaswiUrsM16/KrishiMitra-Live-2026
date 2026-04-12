@@ -50,7 +50,7 @@ The system provides:
 
 We are proud to build technology that empowers Indian farmers.
 
-- **Yashaswi Urs** - Lead Developer & AI Architect
+- **Yashaswi Urs M** - Lead Developer & AI Architect
 - *Add other team members here*
 
 ---
