@@ -76,9 +76,9 @@ try:
         label_encoder = pickle.load(f)
     with open('models/crop_info.pkl', 'rb') as f:
         crop_info = pickle.load(f)
-    print(f"ML Model loaded! Accuracy: {crop_info['accuracy']*100:.2f}%")
+    print(f"SUCCESS: ML Model loaded! Accuracy: {crop_info['accuracy']*100:.2f}%")
 except Exception as e:
-    print(f"ML Model not loaded: {e}")
+    print(f"WARNING: ML Model not loaded: {e}")
     crop_model    = None
     label_encoder = None
     crop_info     = None

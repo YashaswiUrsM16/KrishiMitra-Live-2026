@@ -12,6 +12,22 @@ voice_bp = Blueprint('voice', __name__)
 def ivr_dashboard():
     return render_template('voice.html')
 
+@voice_bp.route('/api/ai_test')
+def ai_test():
+    """Quick diagnostic - tests AI pipeline directly."""
+    try:
+        from ai_utils import call_ai
+        result = call_ai(
+            messages=[{"role": "user", "content": "Say hello in one sentence"}],
+            model="llama-3.1-8b-instant",
+            max_tokens=100,
+            temperature=0.5
+        )
+        return jsonify({"status": "ok", "reply": result})
+    except Exception as e:
+        import traceback
+        return jsonify({"status": "error", "error": str(e), "trace": traceback.format_exc()})
+
 @voice_bp.route('/api/voice_call', methods=['POST'])
 @login_required
 def api_voice_call():
@@ -20,6 +36,7 @@ def api_voice_call():
     
     try:
         from ai_utils import call_ai
+        import traceback
 
         location = "India"
         crops = "farming"
@@ -32,50 +49,49 @@ def api_voice_call():
         if latest_prediction:
             prediction_context = f"The ML engine predicted {latest_prediction.crop_name} as the best crop for this user with an accuracy of {round(latest_prediction.confidence_score, 1)}%. The soil is {latest_prediction.soil_type}. If they ask, make sure to state this accurate prediction and recommend secondary crops to boost profit."
 
-        import requests
+        import requests as req_lib
         weather_context = "Weather data unavailable."
         from config import Config
         try:
             api_key = Config.WEATHER_API_KEY
             url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
-            r = requests.get(url, timeout=2)
+            r = req_lib.get(url, timeout=2)
             if r.status_code == 200:
                 d = r.json()
-                weather_context = f"{d['main']['temp']}°C, {d['weather'][0]['description']}"
+                weather_context = f"{d['main']['temp']}C, {d['weather'][0]['description']}"
         except: pass
 
-        dialect_instruction = "respond in standard pure Kannada."
+        dialect_instruction = "respond in standard pure Kannada (if using Kannada)."
         loc_lower = location.lower() if location else ""
         if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
-            dialect_instruction = "respond ONLY in Mangalore Kannada dialect (Kundagannada/Coastal Kannada style), using coastal slang and intonation."
-        elif any(c in loc_lower for c in ["uttara kannada", "karwar", "sirsi", "kumta"]):
-            dialect_instruction = "respond ONLY using Uttara Kannada dialect (Havyaka/Kumta Kannada style) with local slang."
+            dialect_instruction = "if using Kannada, use the Mangalore (Kundagannada) dialect with coastal slang."
         elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur"]):
-            dialect_instruction = "respond ONLY using North Karnataka Kannada (Jawari/Hubballi dialect) slang."
+            dialect_instruction = "if using Kannada, use the North Karnataka (Jawari) dialect."
         elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya"]):
-            dialect_instruction = "respond ONLY using old Mysuru/Mandya dialect Kannada."
+            dialect_instruction = "if using Kannada, use the Old Mysuru/Mandya dialect style."
 
-        system_prompt = f"""You are KrishiMitraAI, a Senior Expert on a live AUDIO PHONE CALL with a farmer.
-Farmer Profile: Name: {current_user.name}, Region: {location}, Crops: {crops}
-LIVE WEATHER IN {location}: {weather_context}
+        system_prompt = f"""You are KrishiMitraAI, a Senior Agricultural Expert on a live AUDIO PHONE CALL.
+Farmer: {current_user.name} | Region: {location} | Crops: {crops}
+LIVE WEATHER: {weather_context}
 {prediction_context}
 
-Strict Rules for Phone Call Mode:
-1. Act like a helpful, conversational human agricultural expert on the phone. Explain answers nicely and detailed.
-2. If the user speaks in Kannada or if the region is in Karnataka, {dialect_instruction}
-3. DO NOT output markdown, symbols, asterisks, or bullet points. Speak in clear natural sentences.
-4. NEVER tell the farmer to "refer to the weather". YOU already know the {weather_context}, so YOU must advise them accordingly.
-5. Provide high-accuracy, elaborated farming advice based on {location} and {crops}.
-6. Keep your answers reasonably concise (under 5-6 sentences). ALWAYS finish your thought completely. Do not leave trailing or unfinished sentences.
-7. Crucially: You have long-term memory. Proactively check on the user regarding their past questions, recommendations or problems stated in the chat memory to keep a great relationship."""
+STRICT PHONE CALL RULES:
+1. Act like a helpful, conversational human expert.
+2. Respond in the SAME language the farmer uses (Kannada or English).
+3. {dialect_instruction}
+4. DO NOT use markdown, asterisks, or bullet points. Speak in clear natural sentences.
+5. Provide elaborated, science-backed farming advice based on {location} and {crops}.
+6. Keep answers reasonably concise (under 6 sentences) but thorough.
+7. Use the weather ({weather_context}) proactively to give advice."""
 
         messages = [{"role": "system", "content": system_prompt}]
         
-        # Cross-platform persistent memory: load past interactions
-        recent_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp.desc()).limit(8).all()
+        # Cross-platform persistent memory: load ONLY last 3 entries to stay under token limits
+        recent_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp.desc()).limit(3).all()
         recent_chats.reverse()
         for chat in recent_chats:
-            messages.append({"role": "assistant" if chat.role == "ai" else "user", "content": chat.message})
+            if chat.message:  # Skip any remaining null entries
+                messages.append({"role": "assistant" if chat.role == "ai" else "user", "content": chat.message})
             
         messages.append({"role": "user", "content": message})
 
@@ -86,20 +102,23 @@ Strict Rules for Phone Call Mode:
             temperature=0.5
         )
 
-        # Update persistent history for omnichannel continuity
-        new_user_msg = ChatHistory(user_id=current_user.id, role='user', message=message)
-        new_ai_msg = ChatHistory(user_id=current_user.id, role='ai', message=reply_text)
-        db.session.add(new_user_msg)
-        db.session.add(new_ai_msg)
-        db.session.commit()
+        # Update persistent history for omnichannel continuity - ONLY if response is valid
+        if reply_text and "trouble connecting" not in reply_text and "AI_LINK_FAILURE" not in reply_text:
+            new_user_msg = ChatHistory(user_id=current_user.id, role='user', message=message)
+            new_ai_msg = ChatHistory(user_id=current_user.id, role='ai', message=reply_text)
+            db.session.add(new_user_msg)
+            db.session.add(new_ai_msg)
+            db.session.commit()
 
         return jsonify({
             "status": "success",
             "reply": reply_text
         })
     except Exception as e:
-        print("Voice Call Error:", e)
-        return jsonify({"status": "error", "reply": "Sorry, connection dropped. Please call again."})
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "reply": f"Sorry, connection error: {str(e)}"})
+
 
 # ─── REAL PHONE CALL INTEGRATION (TWILIO IVR) ───────────────────────
 
@@ -135,9 +154,9 @@ def voice_incoming():
             if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
                 speech_hints = "yenta, maaraya, kanchodu, edde, porlu, daane, aanda, ijji, krishi, bele"
             elif any(c in loc_lower for c in ["uttara kannada", "karwar", "sirsi", "kumta"]):
-                speech_hints = "gottada, aatu, kelsa, henga, haudu, beda, maraya, krishi, bele"
+                speech_hints = "gottada, aatu, kelsa, henga, haudu, maraya, krishi, bele"
             elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi"]):
-                speech_hints = "togo, barri, aithri, henge, khare, beku, beda, krishi, raitha, bele"
+                speech_hints = "togo, barri, aithri, henge, khare, beku, krishi, raitha, bele"
 
     gather = Gather(input='speech', action='/voice/respond', language=lang, speechTimeout='auto', hints=speech_hints)
     gather.say(greeting, language=lang)
@@ -207,8 +226,8 @@ def voice_respond():
         
         reply_text = call_ai(messages=messages, model="llama-3.1-8b-instant")
         
-        # Save history
-        if user:
+        # Save history if valid
+        if user and reply_text and "I'm having trouble connecting" not in reply_text:
             db.session.add(ChatHistory(user_id=user.id, role='user', message=speech_result))
             db.session.add(ChatHistory(user_id=user.id, role='ai', message=reply_text))
             db.session.commit()
@@ -223,9 +242,9 @@ def voice_respond():
         if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
             speech_hints = "yenta, maaraya, kanchodu, edde, porlu, daane, aanda, ijji, krishi, bele"
         elif any(c in loc_lower for c in ["uttara kannada", "karwar", "sirsi", "kumta"]):
-            speech_hints = "gottada, aatu, kelsa, henga, haudu, beda, maraya, krishi, bele"
+            speech_hints = "gottada, aatu, kelsa, henga, haudu, maraya, krishi, bele"
         elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi"]):
-            speech_hints = "togo, barri, aithri, henge, khare, beku, beda, krishi, raitha, bele"
+            speech_hints = "togo, barri, aithri, henge, khare, beku, krishi, raitha, bele"
 
         gather = Gather(input='speech', action='/voice/respond', language=lang, speechTimeout='auto', hints=speech_hints)
         gather.say(reply_text, language=lang)

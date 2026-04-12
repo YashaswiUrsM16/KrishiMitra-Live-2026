@@ -1,111 +1,138 @@
 import os
 import time
 import requests
+import sys
 from groq import Groq
 
 from config import Config
 
+def safe_print(msg):
+    """Print that won't crash on Windows CP1252 consoles with Unicode."""
+    try:
+        print(msg)
+    except (UnicodeEncodeError, UnicodeDecodeError):
+        print(msg.encode('ascii', 'replace').decode('ascii'))
+
 def get_groq_client():
     return Groq(api_key=Config.GROQ_API_KEY)
 
-def call_ai(messages, model="gemini-3-flash-preview", max_tokens=1800, temperature=0.5):
+def call_ai(messages, model="llama-3.1-8b-instant", max_tokens=1800, temperature=0.5):
     """
-    Calls AI models with a sequence-based fallback mechanism.
-    Prioritizes Gemini if API key is present, fallback to Groq.
-    Using REST API for Gemini to avoid SDK issues on Python 3.14.
+    Calls AI. Goes straight to Groq (Gemini quota is exhausted).
     """
+    import sys
     
-    # List of models confirmed available for this API key - prioritizing speed and stability
-    gemini_models = ["gemini-2.0-flash", "gemini-flash-latest", "gemini-3-flash-preview", "gemini-2.5-flash"]
-    
-    # If a specific Llama model was requested, skip Gemini to save time (Crucial for Voice AI)
-    is_llama_requested = model and "llama" in model.lower()
-
-    if not is_llama_requested and Config.GEMINI_API_KEY and len(Config.GEMINI_API_KEY) > 10:
-        # Use the requested model first if it's a gemini model
-        ordered_models = []
-        if model and "gemini" in model.lower():
-            ordered_models.append(model)
-        for gm in gemini_models:
-            if gm not in ordered_models: ordered_models.append(gm)
-
-        for gem_model in ordered_models:
-            try:
-                # Convert messages to Gemini format and extract system prompt
-                gemini_contents = []
-                system_instruction_text = ""
-                
-                for msg in messages:
-                    if msg['role'] == 'system':
-                        system_instruction_text += msg['content'] + "\n"
-                    else:
-                        role = "user" if msg['role'] == 'user' else "model"
-                        content = msg.get('content', '')
-                        if content:
-                            gemini_contents.append({
-                                "role": role,
-                                "parts": [{"text": content}]
-                            })
-                
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{gem_model}:generateContent?key={Config.GEMINI_API_KEY}"
-                
-                payload = {
-                    "contents": gemini_contents,
-                    "generationConfig": {
-                        "maxOutputTokens": max_tokens,
-                        "temperature": temperature
-                    }
-                }
-                
-                if system_instruction_text:
-                    payload["system_instruction"] = {
-                        "parts": [{"text": system_instruction_text.strip()}]
-                    }
-                
-                headers = {"Content-Type": "application/json"}
-                
-                response = requests.post(url, json=payload, headers=headers, timeout=60)
-                
-                if response.status_code == 200:
-                    data = response.json()
-                    if 'candidates' in data and len(data['candidates']) > 0:
-                        candidate = data['candidates'][0]
-                        if 'content' in candidate and 'parts' in candidate['content']:
-                            return candidate['content']['parts'][0]['text'].strip()
-                
-                print(f"Gemini {gem_model} error: {response.status_code}")
-                if response.status_code == 429 or response.status_code == 503:
-                    continue # Try next Gemini model
-            except Exception as e:
-                print(f"Gemini {gem_model} Call failed: {e}")
-                continue
-
-    # Fallback to Groq - Use faster model for better UX
-    client = get_groq_client()
-    
-    # Prioritize the explicitly requested model, then fall back to speed/scale
-    models_to_try = [model] if model else []
-    for fallback_idx in ["llama-3.1-8b-instant", "llama-3.3-70b-versatile", "llama-3.1-70b-versatile"]:
-        if fallback_idx not in models_to_try:
-            models_to_try.append(fallback_idx)
-    
-    last_error = None
-    for m in models_to_try:
+    def _safe_print(msg):
         try:
-            response = client.chat.completions.create(
-                messages=messages,
-                model=m,
-                max_tokens=max_tokens,
-                temperature=temperature
-            )
-            return response.choices[0].message.content.strip()
+            print(str(msg).encode('ascii', 'replace').decode('ascii'))
+        except Exception:
+            pass
+
+    # --- Sanitize messages: remove any None or non-string content ---
+    clean_messages = []
+    for msg in messages:
+        role = msg.get('role', 'user')
+        content = msg.get('content', '')
+        if content is None:
+            content = ''
+        content = str(content).strip()
+        if role in ('system', 'user', 'assistant') and content:
+            clean_messages.append({"role": role, "content": content})
+    
+    if not clean_messages:
+        clean_messages = [{"role": "user", "content": "Hello"}]
+
+    _safe_print(f"DEBUG: call_ai called, {len(clean_messages)} messages, model={model}")
+
+    # --- Try Groq first (Gemini free-tier quota is exhausted) ---
+    # Prioritize Llama 3.3 70B for better quality, fallback to others
+    groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama-3.2-3b-preview", "mixtral-8x7b-32768"]
+    
+    # If caller wants a specific model, try it first
+    if model and model not in groq_models:
+        if "llama" in model.lower() or "mixtral" in model.lower():
+            groq_models.insert(0, model)
+
+    # --- Trim messages to fit within free-tier token limits ---
+    # Keep system prompt + more history for better relevance
+    def trim_messages(msgs, max_chars=12000):
+        total = sum(len(m.get('content', '')) for m in msgs)
+        if total <= max_chars:
+            return msgs
+            
+        # Keep system prompt
+        system = [m for m in msgs if m['role'] == 'system']
+        others = [m for m in msgs if m['role'] != 'system']
+        
+        # Keep last 10 messages (5 exchanges) for better context
+        others = others[-10:]
+        trimmed = system + others
+        
+        # If still too big, shorten system prompt but keep its core
+        current_total = sum(len(m.get('content','')) for m in trimmed)
+        if current_total > max_chars and system:
+            allowed = max_chars - sum(len(m.get('content','')) for m in others)
+            system[0]['content'] = system[0]['content'][:max(1000, allowed)]
+        return trimmed
+
+    trimmed_messages = trim_messages(clean_messages)
+    _safe_print(f"DEBUG: Sending {len(trimmed_messages)} messages ({sum(len(m.get('content','')) for m in trimmed_messages)} chars)")
+
+    if Config.GROQ_API_KEY and len(Config.GROQ_API_KEY) > 10:
+        try:
+            client = Groq(api_key=Config.GROQ_API_KEY)
+            for groq_model in groq_models:
+                try:
+                    _safe_print(f"DEBUG: Trying Groq {groq_model}")
+                    resp = client.chat.completions.create(
+                        messages=trimmed_messages,
+                        model=groq_model,
+                        max_tokens=max_tokens,
+                        temperature=temperature
+                    )
+                    result = resp.choices[0].message.content
+                    if result:
+                        _safe_print(f"DEBUG: Groq {groq_model} SUCCESS")
+                        return result.strip()
+                except Exception as e:
+                    err_str = str(e)[:150]
+                    _safe_print(f"DEBUG: Groq {groq_model} failed: {err_str}")
+                    continue
+        except Exception as ge:
+            _safe_print(f"DEBUG: Groq init failed: {ge}")
+
+    # --- Fallback: Try Gemini if quota might be available ---
+    if Config.GEMINI_API_KEY and len(Config.GEMINI_API_KEY) > 10:
+        try:
+            gemini_contents = []
+            system_text = ""
+            for msg in clean_messages:
+                if msg['role'] == 'system':
+                    system_text += msg['content'] + "\n"
+                else:
+                    role = "user" if msg['role'] == 'user' else "model"
+                    gemini_contents.append({"role": role, "parts": [{"text": msg['content']}]})
+            
+            payload = {
+                "contents": gemini_contents,
+                "generationConfig": {"maxOutputTokens": max_tokens, "temperature": temperature}
+            }
+            if system_text:
+                payload["system_instruction"] = {"parts": [{"text": system_text.strip()}]}
+            
+            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={Config.GEMINI_API_KEY}"
+            resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=30)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get('candidates'):
+                    text = data['candidates'][0].get('content', {}).get('parts', [{}])[0].get('text', '')
+                    if text:
+                        return text.strip()
         except Exception as e:
-            last_error = str(e)
-            print(f"Groq AI Call failed for model {m}: {e}")
-            if "limit" in last_error.lower() or "rate" in last_error.lower():
-                continue
-            else:
-                break
+            _safe_print(f"DEBUG: Gemini fallback failed: {e}")
+
+    return "I'm having trouble connecting right now. Please try again in a moment."
+
                 
 def call_vision_ai(image_b64, prompt, model="gemini-2.0-flash", mime_type="image/jpeg"):
     """
@@ -166,4 +193,3 @@ def call_vision_ai(image_b64, prompt, model="gemini-2.0-flash", mime_type="image
             print(last_err)
             
     return f"AI_FAILURE: {last_err}"
-

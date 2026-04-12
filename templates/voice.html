@@ -199,6 +199,7 @@
             </select>
             <button class="btn-call" id="btnCall" onclick="startCall()"><i class="fa fa-phone"></i> Call AI</button>
             <button class="btn-end" id="btnEnd" onclick="endCall()"><i class="fa fa-phone-slash"></i> End Call</button>
+            <button class="btn-clear" id="btnClear" onclick="clearMemory()" style="background:transparent; border:1px solid #ef4444; color:#ef4444; padding:10px 20px; border-radius:30px; cursor:pointer; font-weight:600;">Reset Memory</button>
         </div>
 
         <div class="transcript-area" id="transcriptArea">
@@ -242,8 +243,10 @@
         recognition.interimResults = false;
 
         recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            if (transcript.trim() === "") {
+            const transcript = event.results[0][0].transcript.trim();
+            
+            // Guard: ignore empty, too short, or placeholder text
+            if (!transcript || transcript.length < 2 || transcript === "(Listening to you...)") {
                 if (isCallActive) restartListening();
                 return;
             }
@@ -266,11 +269,12 @@
             .then(data => {
                 if(!isCallActive) return; // if user ended call
                 
+                const reply = data.reply || "Sorry, I could not understand. Please try again.";
                 boxAi.style.display = 'flex';
-                aiText.innerText = data.reply;
+                aiText.innerText = reply;
                 statusText.innerText = "AI Speaking...";
                 
-                speakTextAndListen(data.reply, callLang.value);
+                speakTextAndListen(reply, callLang.value);
             })
             .catch(err => {
                 console.error(err);
@@ -403,6 +407,15 @@
             // Usually means already started
             console.log(e);
         }
+    }
+    async function clearMemory() {
+        if(!confirm("Reset conversation history?")) return;
+        statusText.innerText = "Clearing memory...";
+        await fetch('/api/chat/clear', { method: 'POST' });
+        statusText.innerText = "Memory reset.";
+        transcriptArea.style.display = 'none';
+        boxFarmer.style.display = 'none';
+        boxAi.style.display = 'none';
     }
 </script>
 {% endblock %}

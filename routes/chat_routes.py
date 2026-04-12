@@ -45,48 +45,65 @@ def api_chat():
                 weather_context = f"{d['main']['temp']}°C, {d['weather'][0]['description']}"
         except: pass
 
-        dialect_instruction = "respond in standard pure Kannada."
+        dialect_instruction = "respond in standard pure Kannada (if using Kannada)."
         loc_lower = location.lower() if location else ""
         if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
-            dialect_instruction = "respond ONLY in Mangalore Kannada dialect (Kundagannada/Coastal Kannada style), using coastal slang."
-        elif any(c in loc_lower for c in ["uttara kannada", "karwar", "sirsi", "kumta"]):
-            dialect_instruction = "respond ONLY using Uttara Kannada dialect (Havyaka/Kumta Kannada style) with local slang."
-        elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur"]):
-            dialect_instruction = "respond ONLY using North Karnataka Kannada (Jawari/Hubballi dialect) slang."
-        elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya"]):
-            dialect_instruction = "respond ONLY using old Mysuru/Mandya dialect Kannada."
+            dialect_instruction = "if responding in Kannada, use the Mangalore/Coastal Kannada dialect (Kundagannada) with local seafaring and farming slang."
+        elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur", "bagalkot"]):
+            dialect_instruction = "if responding in Kannada, use the North Karnataka (Jawari) dialect with local agricultural idioms."
+        elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya", "chamarajanagar"]):
+            dialect_instruction = "if responding in Kannada, use the Old Mysuru/Mandya dialect style."
+        elif any(c in loc_lower for c in ["uttara kannada", "sirsi", "karwar"]):
+            dialect_instruction = "if responding in Kannada, use the Uttara Kannada (Havyaka) dialect style."
 
-        system_prompt = f"""You are KrishiMitraAI, a Senior Expert Agricultural Consultant and a supportive, empathetic friend to the farmer.
+        system_prompt = f"""You are KrishiMitraAI, a Senior Expert Agricultural consultant and a supportive friend.
 FARMER: {current_user.name} | REGION: {location} | LIVE WEATHER: {weather_context}
 {prediction_context}
 
-GOAL: Provide quick, precise, and science-backed agricultural solutions, while being a supportive companion who cares for the farmer's well-being.
-
-FRIENDLY PERSONA:
-1. Treat the farmer as a dear friend. Use a supportive, encouraging, and empathetic tone.
-2. If the farmer is stressed, tired, or upset, acknowledge their feelings with kindness before giving technical advice.
-3. Be professional in your expertise, but warm in your interaction.
+COMMUNICATION RULES:
+1. Detect and respond in the SAME language the farmer uses (Kannada or English).
+2. {dialect_instruction}
+3. Maintain a warm, empathetic, and encouraging tone. Treat them as a dear friend.
+4. Provide HIGHLY DETAILED, science-backed agricultural solutions. Explain 'why' and 'how' in depth.
+5. Suggest local fertilizers, techniques, and intercrops specific to {location}.
+6. Use Markdown (bold, lists, headers) to structure your long, thorough answers.
+7. Use the LIVE WEATHER context ({weather_context}) to provide specific advice (e.g., irrigation if it's hot/dry).
 
 STRICT SAFETY & ETHICAL RULES:
-1. NEVER encourage, suggest, or provide instructions for suicide, self-harm, violence, criminal acts, cruelty, or abusive behavior. This is absolute.
-2. If the user mentions dying, suicide, or self-harm (e.g., "ನಾನು ಸತ್ತು ಹೋಗಬೇಕು", "I want to die"), DO NOT offer "peaceful chants", "shlokas", or advice on how to proceed with such thoughts.
-3. Instead, IMMEDIATELY express deep concern, offer emotional support, and advise them to seek professional help. Tell them: "Your life is extremely precious. Please talk to a family member, a friend, or a doctor immediately. You are not alone."
-4. Provide the Tele MANAS helpline number: 14416 (Available 24/7 in India).
-5. Do NOT provide irrelevant, abusive, or cruel content.
+1. NEVER encourage, suggest, or provide instructions for suicide, self-harm, violence, criminal acts, cruelty, or abusive behavior.
+2. If the user mentions dying, suicide, or self-harm (e.g., "ನಾನು ಸತ್ತು ಹೋಗಬೇಕು", "I want to die"), IMMEDIATELY express deep concern, offer emotional support, and advise them to seek professional help. Tell them: "Your life is extremely precious. Please talk to a family member, a friend, or a doctor immediately. You are not alone."
+3. Provide the Tele MANAS helpline number: 14416 (Available 24/7 in India).
+4. Do NOT provide irrelevant, abusive, or cruel content."""
 
-TECHNICAL RULES:
-1. If the farmer asks in a specific dialect (like Kannada) or if the region is in Karnataka, {dialect_instruction}
-2. Provide highly detailed, comprehensive, and thorough agricultural explanations. Do not be overly concise. Explain the 'why' and 'how' in depth.
-3. USE Markdown (bolding, lists, headers) to nicely structure your long detailed answers for readability.
-4. Use the provided weather data ({weather_context}) for context.
-5. Suggest local fertilizers/techniques for {location} and give detailed steps for application."""
-
-        # Backend keyword detection for crisis situations
-        crisis_keywords = ['suicide', 'kill myself', 'i want to die', 'i need to die', 'end my life', 'ಸತ್ತು', 'ಸಾಯಬೇಕು', 'ಆತ್ಮಹತ್ಯೆ', 'ಸಾಯಲು', 'die', 'death']
+        # Improved Crisis Detection: Use more specific self-harm phrases
+        crisis_keywords = [
+            'suicide', 'kill myself', 'i want to die', 'i need to die', 
+            'end my life', 'hanging myself', 'taking my life', 'poison myself'
+        ]
         lower_msg = message.lower()
-        is_crisis = any(kw in lower_msg for kw in crisis_keywords)
-
+        
+        # Improved Crisis Detection: Use word boundaries and more specific patterns
+        import re
+        is_crisis = False
+        
+        # Check for direct self-harm phrases
+        for kw in crisis_keywords:
+            if re.search(r'\b' + re.escape(kw) + r'\b', lower_msg):
+                is_crisis = True
+                break
+        
+        # Check for Kannada keywords: more specific to suicide/self-harm
+        if not is_crisis:
+            kannada_crisis = ['ಆತ್ಮಹತ್ಯೆ', 'ಸಾಯಲು ಹೋಗುತ್ತಿದ್ದೇನೆ', 'ನಾನು ಸಾಯಬೇಕು'] # suicide, I'm going to die, I should die
+            if any(kn in lower_msg for kn in kannada_crisis):
+                is_crisis = True
+        
+        # Guard against common farming terms like "pests will die" or "crops are dying"
         if is_crisis:
+            farming_context = ['pest', 'crop', 'worm', 'insect', 'weed', 'plant', 'bele', 'sasye', 'hula']
+            if any(term in lower_msg for term in farming_context):
+                is_crisis = False # It's probably about the farm
+
             # GUARANTEED SAFETY: Bypass AI entirely for crisis keywords
             reply_text = """❤️ **You are not alone. Your life is extremely precious.**
 
@@ -127,12 +144,13 @@ Your presence matters more than any problem you are facing. Please reach out now
             temperature=0.5
         )
 
-        # Update Persistent History
-        new_user_msg = ChatHistory(user_id=current_user.id, role='user', message=message)
-        new_ai_msg = ChatHistory(user_id=current_user.id, role='ai', message=reply_text)
-        db.session.add(new_user_msg)
-        db.session.add(new_ai_msg)
-        db.session.commit()
+        # Update Persistent History - ONLY save valid AI responses
+        if reply_text and "trouble connecting" not in reply_text and "AI_LINK_FAILURE" not in reply_text and "error occurred" not in reply_text:
+            new_user_msg = ChatHistory(user_id=current_user.id, role='user', message=message)
+            new_ai_msg = ChatHistory(user_id=current_user.id, role='ai', message=reply_text)
+            db.session.add(new_user_msg)
+            db.session.add(new_ai_msg)
+            db.session.commit()
 
         return jsonify({
             'reply': reply_text, 
