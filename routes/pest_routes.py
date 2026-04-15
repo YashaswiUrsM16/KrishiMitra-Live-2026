@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
-from database import db, PestDetection
+from database import db, PestDetection, ActivityLog
 import os
 import base64
 import json
@@ -108,6 +108,9 @@ JSON structure:
             location   = current_user.location or (current_user.profile.location_district if current_user.profile else 'Karnataka')
         )
         db.session.add(pest_record)
+        
+        log = ActivityLog(user_id=current_user.id, action=f"Detected Pest: {result.get('disease_name', 'Unknown')}", ip_address=request.remote_addr)
+        db.session.add(log)
         db.session.commit()
 
         # AUTOMATIC EMERGENCY SMS NOTIFICATION
