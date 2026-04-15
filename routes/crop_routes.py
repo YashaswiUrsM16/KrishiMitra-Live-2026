@@ -1,3 +1,18 @@
+from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user
+from database import db, CropHistory, ActivityLog
+import pickle
+import os
+
+crop_bp = Blueprint('crop', __name__)
+
+# ─── LOAD ML MODEL ──────────────────────────────────
+try:
+    with open('models/crop_model.pkl', 'rb') as f:
+        crop_model = pickle.load(f)
+    with open('models/label_encoder.pkl', 'rb') as f:
+        label_encoder = pickle.load(f)
+    with open('models/crop_info.pkl', 'rb') as f:
         crop_info = pickle.load(f)
 except Exception as e:
     crop_model    = None
@@ -100,6 +115,9 @@ def api_ml_crop():
             soil_suitability = soil_suitability_score
         )
         db.session.add(record)
+        
+        log = ActivityLog(user_id=current_user.id, action=f"Analyzed Crop Strategy for {target_crop_name}", ip_address=request.remote_addr)
+        db.session.add(log)
         db.session.commit()
 
         return jsonify({
