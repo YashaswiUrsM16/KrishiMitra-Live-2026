@@ -66,7 +66,7 @@ importances = model.feature_importances_
 print("\nFeature Importance:")
 for name, imp in sorted(zip(feature_names, importances),
                          key=lambda x: x[1], reverse=True):
-    bar = '█' * int(imp * 40)
+    bar = '#' * int(imp * 40)
     print(f"   {name:15} {bar} {imp:.3f}")
 
 # ── STEP 7: Save Model ───────────────────────────

@@ -342,114 +342,20 @@ const catIconBg = {
 };
 
 const schemes = [
+  {% for s in schemes %}
   {
-    name:'PM Kisan Samman Nidhi', icon:'🌾', category:'income',
-    amount:'₹6,000 / year',
-    description:'Small & marginal farmers get ₹2,000 in 3 installments directly into bank account every year.',
-    eligibility:'Any farmer owning up to 2 hectares of land',
-    documents:'Aadhaar Card • Bank Passbook • Khasra/Khatauni',
-    tags:['Central Scheme','Direct Benefit','No Agent Required'],
-    link:'https://pmkisan.gov.in', status:'Active'
+    name: '{{ s.name }}', 
+    icon: '{{ s.icon }}', 
+    category: '{{ s.category }}',
+    amount: '{{ s.amount }}',
+    description: '{{ s.description }}',
+    eligibility: '{{ s.eligibility }}',
+    documents: '{{ s.documents }}',
+    tags: {{ s.tags.split(',') | tojson }},
+    link: '{{ s.link }}', 
+    status: '{{ s.status }}'
   },
-  {
-    name:'PM Fasal Bima Yojana', icon:'🛡️', category:'insurance',
-    amount:'Up to 90% crop loss coverage',
-    description:'Insurance coverage for crop losses due to natural calamities, pests, and diseases at very low premium.',
-    eligibility:'All farmers — both loanee and non-loanee',
-    documents:'Aadhaar • Bank Account • Land Record • Sowing Certificate',
-    tags:['Insurance','Central Scheme','Low Premium'],
-    link:'https://pmfby.gov.in', status:'Active'
-  },
-  {
-    name:'Kisan Credit Card (KCC)', icon:'💳', category:'loan',
-    amount:'Up to ₹3 lakh @ 4% interest',
-    description:'Low-interest agricultural loan for buying seeds, fertilizers, pesticides and meeting crop production needs.',
-    eligibility:'All farmers including sharecroppers and tenant farmers',
-    documents:'Aadhaar • PAN • Land Records • Passport Photo',
-    tags:['Low Interest','Flexible Credit','Bank'],
-    link:'https://www.nabard.org', status:'Active'
-  },
-  {
-    name:'PM Krishi Sinchayee Yojana', icon:'💧', category:'irrigation',
-    amount:'55–75% subsidy on drip/sprinkler',
-    description:'Government subsidy on installing drip irrigation and sprinkler systems to improve water use efficiency.',
-    eligibility:'All farmers — SC/ST get higher subsidy',
-    documents:'Aadhaar • Land Record • Bank Account',
-    tags:['Irrigation','Subsidy','Water Saving'],
-    link:'https://pmksy.gov.in', status:'Active'
-  },
-  {
-    name:'Soil Health Card Scheme', icon:'🌍', category:'income',
-    amount:'Free soil testing',
-    description:'Free soil health card providing detailed information about soil nutrients and fertilizer recommendations.',
-    eligibility:'All farmers across India',
-    documents:'Aadhaar • Land Record',
-    tags:['Free Service','Soil Testing','Nutrient Info'],
-    link:'https://soilhealth.dac.gov.in', status:'Active'
-  },
-  {
-    name:'PM Kisan Maandhan Yojana', icon:'👴', category:'income',
-    amount:'₹3,000/month pension after 60',
-    description:'Pension scheme for small and marginal farmers — get ₹3,000 monthly after age 60 with minimal contribution.',
-    eligibility:'Farmers aged 18–40 with up to 2 hectares of land',
-    documents:'Aadhaar • Bank Account • Land Record',
-    tags:['Pension','Long Term','Monthly Income'],
-    link:'https://maandhan.in', status:'Active'
-  },
-  {
-    name:'eNAM — National Agriculture Market', icon:'📱', category:'income',
-    amount:'Best market price for crops',
-    description:'Online trading platform connecting farmers directly with buyers across India for better crop prices.',
-    eligibility:'All farmers',
-    documents:'Aadhaar • Bank Account • Mobile Number',
-    tags:['Online Market','Better Price','No Middlemen'],
-    link:'https://enam.gov.in', status:'Active'
-  },
-  {
-    name:'Agriculture Infrastructure Fund', icon:'🏗️', category:'loan',
-    amount:'Up to ₹2 crore loan',
-    description:'Affordable loan for building cold storage, warehouses and processing units to reduce post-harvest losses.',
-    eligibility:'FPOs, Cooperatives, Agri-entrepreneurs',
-    documents:'Project Report • Aadhaar • Business Plan',
-    tags:['Infrastructure','Large Loan','Post-Harvest'],
-    link:'https://agriinfra.dac.gov.in', status:'Active'
-  },
-  {
-    name:'Agricultural Mechanization Scheme', icon:'🚜', category:'equipment',
-    amount:'25–50% subsidy on machinery',
-    description:'Government subsidy on purchasing tractors, harvesters, rotavators and other farm machinery.',
-    eligibility:'Small & marginal farmers — SC/ST get higher subsidy',
-    documents:'Aadhaar • Land Record • Bank Account • Caste Certificate',
-    tags:['Machinery','Subsidy','Farm Equipment'],
-    link:'https://farmech.dac.gov.in', status:'Active'
-  },
-  {
-    name:'Paramparagat Krishi Vikas Yojana', icon:'🌿', category:'income',
-    amount:'₹50,000/hectare for 3 years',
-    description:'Financial support for converting to organic farming — get ₹50,000 per hectare for 3 years.',
-    eligibility:'Farmers willing to adopt organic farming',
-    documents:'Aadhaar • Land Record • Group Formation',
-    tags:['Organic Farming','Premium Price','3 Year Support'],
-    link:'https://pgsindia-ncof.gov.in', status:'Active'
-  },
-  {
-    name:'PM KUSUM Solar Pump Scheme', icon:'☀️', category:'irrigation',
-    amount:'90% subsidy on solar pump',
-    description:'Up to 90% government subsidy on solar pumps — zero electricity bills and extra income from surplus power.',
-    eligibility:'All farmers with agricultural land',
-    documents:'Aadhaar • Land Record • Bank Account',
-    tags:['Solar Energy','90% Subsidy','Free Electricity'],
-    link:'https://mnre.gov.in', status:'Active'
-  },
-  {
-    name:'Rashtriya Krishi Vikas Yojana', icon:'📈', category:'income',
-    amount:'Project-based funding',
-    description:'Funding for agriculture development infrastructure through state government agriculture departments.',
-    eligibility:'Via state government agriculture department',
-    documents:'Contact State Agriculture Dept.',
-    tags:['State Scheme','Development','Infrastructure'],
-    link:'https://rkvy.nic.in', status:'Active'
-  },
+  {% endfor %}
 ];
 
 function renderSchemes(data) {

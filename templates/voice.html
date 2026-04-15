@@ -65,13 +65,19 @@
 }
 
 @keyframes pulse-ring-listen {
-    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-    70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); background: #fff1f2; }
+    70% { box-shadow: 0 0 0 30px rgba(239, 68, 68, 0); background: #ffe4e6; }
     100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 @keyframes pulse-ring-speak {
-    0% { box-shadow: 0 0 10px rgba(46, 204, 113, 0.5), inset 0 0 10px rgba(46, 204, 113, 0.5); }
-    100% { box-shadow: 0 0 40px rgba(46, 204, 113, 1), inset 0 0 20px rgba(46, 204, 113, 0.8); }
+    0% { 
+        box-shadow: 0 0 10px rgba(46, 204, 113, 0.3), inset 0 0 10px rgba(46, 204, 113, 0.2);
+        transform: scale(1);
+    }
+    100% { 
+        box-shadow: 0 0 50px rgba(46, 204, 113, 0.8), inset 0 0 20px rgba(46, 204, 113, 0.5);
+        transform: scale(1.05);
+    }
 }
 
 .status-text {
@@ -362,12 +368,26 @@
             
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang;
+            utterance.rate = 0.95; // Slightly slower for better clarity
+            utterance.pitch = 1.0;
+
+            // Voice Selection Optimization
+            const voices = window.speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                // Try to find a high-quality Indian or local voice
+                const preferredVoice = voices.find(v => 
+                    (v.lang.includes(lang) && (v.name.includes("Google") || v.name.includes("Natural"))) || 
+                    (v.lang.includes(lang))
+                );
+                if (preferredVoice) utterance.voice = preferredVoice;
+            }
             
             utterance.onend = () => {
                 avatarRing.classList.remove('speaking');
                 if (isCallActive) {
                     isProcessing = false;
-                    restartListening();
+                    // Small delay to prevent echo before listening starts
+                    setTimeout(restartListening, 500); 
                 }
             };
             
@@ -375,7 +395,7 @@
                 avatarRing.classList.remove('speaking');
                 if (isCallActive) {
                     isProcessing = false;
-                    restartListening();
+                    setTimeout(restartListening, 500);
                 }
             };
             

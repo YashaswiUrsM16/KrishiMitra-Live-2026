@@ -282,64 +282,7 @@
 
 {% block extra_js %}
 <script>
-const allTips = {
-  general: [
-    { tip:'Get your soil tested every 2-3 years — Soil Health Card is FREE from the government!', icon:'🌍' },
-    { tip:'Practice crop rotation — never grow the same crop repeatedly, it depletes soil nutrients.', icon:'🔄' },
-    { tip:'Always buy certified seeds — they give 20-30% higher yield than uncertified ones.', icon:'🌱' },
-    { tip:'Spray pesticides in the morning — wind is low and effectiveness is much higher.', icon:'🌅' },
-    { tip:'Use compost or vermicompost in your fields — reduces need for chemical fertilizers.', icon:'♻️' },
-    { tip:'Monitor your crops regularly — early detection of disease saves up to 40% of losses.', icon:'👀' },
-    { tip:'Install the PM Kisan app — check scheme status and payment details anytime.', icon:'📱' },
-    { tip:'Register on eNAM platform — sell your crops online and get the best market price.', icon:'💻' },
-  ],
-  kharif: [
-    { tip:'Treat seeds with Rhizobium or Trichoderma before sowing — builds disease resistance.', icon:'🌱' },
-    { tip:'Prepare rice nursery in June — transplant in July for optimal yield.', icon:'🌾' },
-    { tip:'Arrange proper field drainage before Kharif — waterlogging kills crops.', icon:'🌧️' },
-    { tip:'Use pheromone traps for pink bollworm control in cotton — reduces pesticide use.', icon:'🌸' },
-    { tip:'Stop irrigation during soybean flowering — prevents lodging and increases yield.', icon:'🫘' },
-    { tip:'Deep plow after Kharif harvest and expose soil to sun — kills soil-borne diseases.', icon:'☀️' },
-  ],
-  rabi: [
-    { tip:'First wheat irrigation at Crown Root Initiation (CRI) stage — 20-25 days after sowing.', icon:'🌿' },
-    { tip:'Spray imidacloprid on mustard before flowering to control aphid attack.', icon:'🌼' },
-    { tip:'Use sprinkler irrigation at dawn to protect crops from frost in winter mornings.', icon:'❄️' },
-    { tip:'Use Trichoderma-treated seeds for chickpea — prevents deadly wilt disease.', icon:'🫘' },
-    { tip:'Harvest wheat when 85% grains are ripe — over-ripening causes sunburn losses.', icon:'🌾' },
-    { tip:'Apply final NPK dose at flag leaf stage for maximum Rabi crop yield.', icon:'💊' },
-  ],
-  zaid: [
-    { tip:'Use plastic mulching for watermelon and muskmelon in Zaid — saves 40% water.', icon:'🍉' },
-    { tip:'Switch to drip irrigation in summer — saves 40-50% water and boosts yield.', icon:'💧' },
-    { tip:'Install shade nets over Zaid vegetables — protects from extreme heat stress.', icon:'🌿' },
-    { tip:'Use trellis system for cucumber and bottle gourd — improves fruit quality significantly.', icon:'🥒' },
-    { tip:'Irrigate in the evening in summer — morning and afternoon evaporation wastes water.', icon:'🌅' },
-  ],
-  soil: [
-    { tip:'Maintain soil pH between 6 and 7.5 — optimal range for most Indian crops.', icon:'🌍' },
-    { tip:'Add lime to acidic soil and gypsum to alkaline soil to restore pH balance.', icon:'⚗️' },
-    { tip:'Make vermicompost at home — easy, cheap, and extremely beneficial for soil health.', icon:'🪱' },
-    { tip:'Grow Dhaincha or Sunhemp as green manure and plow it in — boosts soil nitrogen.', icon:'🌿' },
-    { tip:'Never leave soil bare — plant cover crops or apply mulch to protect soil structure.', icon:'🌱' },
-    { tip:'Deep plow every 2-3 years — breaks hardpan and improves water penetration.', icon:'🚜' },
-  ],
-  water: [
-    { tip:'Install drip irrigation — saves 50-70% water and significantly increases yield.', icon:'💧' },
-    { tip:'Build farm ponds for rainwater harvesting — store monsoon water for dry seasons.', icon:'🌧️' },
-    { tip:'Irrigate in early morning or evening — afternoon irrigation loses 30% to evaporation.', icon:'⏰' },
-    { tip:'Mulch your fields — plastic or dry grass cover reduces water requirements by 40%.', icon:'♻️' },
-    { tip:'Use a tensiometer to check soil moisture — only irrigate when actually needed.', icon:'📊' },
-  ],
-  pest: [
-    { tip:'Follow IPM (Integrated Pest Management) — biological controls first, chemicals last.', icon:'🐛' },
-    { tip:'Spray neem oil solution — safe organic pesticide effective against many insects.', icon:'🌿' },
-    { tip:'Install yellow sticky traps in fields — catches whiteflies and aphids effectively.', icon:'🟡' },
-    { tip:'Use pheromone traps to catch male insects — controls pest population naturally.', icon:'🪤' },
-    { tip:'Rotate pesticide chemicals — prevents resistance buildup in pest populations.', icon:'🔄' },
-    { tip:'Release Trichogramma cards — biological control for caterpillar and stem borer.', icon:'🦠' },
-  ],
-};
+const allTips = {{ grouped_tips | tojson }};
 
 let currentSeason = 'general';
 

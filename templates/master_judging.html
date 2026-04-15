@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Database Report | Judging Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2ecc71;
+            --dark: #0f172a;
+            --border: #e2e8f0;
+            --text-main: #1e293b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #f8fafc;
+            color: var(--text-main);
+            margin: 0;
+            padding: 3rem 1rem;
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 4rem;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 2rem;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin: 0;
+            color: var(--dark);
+        }
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+        .table-section {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+            margin-bottom: 4rem;
+            overflow: hidden;
+        }
+        .table-header {
+            background: #f1f5f9;
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .table-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        .record-count {
+            background: var(--primary);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .table-wrap {
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            background: #fff;
+            text-align: left;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border);
+        }
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            color: #334155;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        tr:last-child td {
+            border-bottom: none;
+        }
+        tr:hover {
+            background: #f8fafc;
+        }
+        .security-mark {
+            font-family: monospace;
+            color: #ef4444;
+            background: #fee2e2;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        @media print {
+            body { padding: 0; }
+            .table-section { break-inside: avoid; border: 1px solid #000; box-shadow: none; }
+            .header { border-bottom: 4px solid #000; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Backend Data Architecture Report</h1>
+            <p>Master Table Log · Persistent Storage Audit · Judging Session Output</p>
+        </header>
+
+        {% for table_name, data in tables.items() %}
+        <section class="table-section">
+            <div class="table-header">
+                <h2><i class="fas fa-table"></i> {{ table_name }}</h2>
+                <span class="record-count">{{ data.rows|length }} Records stored</span>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            {% for col in data.columns %}
+                            <th>{{ col|replace('_', ' ')|title }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if data.rows %}
+                            {% for row in data.rows %}
+                            <tr>
+                                {% for col in data.columns %}
+                                <td>
+                                    {% set val = getattr(row, col) %}
+                                    {% if col == 'password' or col == 'pin_hash' %}
+                                        <span class="security-mark">[BYCRYPT HASH PROTECTED]</span>
+                                    {% elif 'date' in col or 'time' in col %}
+                                        {{ val.strftime('%Y-%m-%d %H:%M') if val else 'NULL' }}
+                                    {% else %}
+                                        {{ val if val != None else 'NULL' }}
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="{{ data.columns|length }}" style="text-align: center; padding: 3rem; color: #94a3b8;">
+                                    Table is currently empty. Start interacting with the app to generate persistent data.
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        {% endfor %}
+
+        <footer style="text-align: center; margin-top: 5rem; color: #94a3b8; font-size: 0.8rem;">
+            Generated by KrishiMitraAI System Auditor · SQLite 3 Backend · Bcrypt Security Protocol Active
+        </footer>
+    </div>
+</body>
+</html>

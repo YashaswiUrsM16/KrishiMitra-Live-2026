@@ -211,27 +211,65 @@
     flex-shrink: 0;
   }
 
-  /* ── ACTIONS GRID ── */
+  /* ── QUICK ACTIONS ── */
+  .quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
   .quick-action {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
-    padding: 1.25rem;
-    border-radius: 18px;
-    background: var(--slate-50);
-    border: 1.5px solid var(--slate-200);
+    gap: 0.75rem;
+    padding: 1.25rem 0.5rem;
+    border-radius: 20px;
+    background: white;
+    border: 1px solid var(--slate-200);
     text-decoration: none;
     color: var(--slate-700);
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     font-weight: 700;
     text-align: center;
-    transition: all 0.25s;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   }
-  .quick-action:hover { background: #f0fdf4; border-color: var(--emerald); color: var(--emerald-dark); transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1); }
-  .quick-action .qa-icon { font-size: 1.8rem; }
+  .quick-action:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+    border-color: var(--emerald);
+  }
+  .qa-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s;
+  }
+  .quick-action:hover .qa-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  /* Color Themes */
+  .qa-intel .qa-icon-wrapper { background: #ecfdf5; color: #059669; }
+  .qa-diagnose .qa-icon-wrapper { background: #fff1f2; color: #e11d48; }
+  .qa-climate .qa-icon-wrapper { background: #f0f9ff; color: #0ea5e9; }
+  .qa-finance .qa-icon-wrapper { background: #fffbeb; color: #d97706; }
+  .qa-advisor .qa-icon-wrapper { background: #f5f3ff; color: #7c3aed; }
+  .qa-pro .qa-icon-wrapper { background: #111827; color: #fbbf24; }
+  .qa-pro { background: #f8fafc; border: 1px solid #e2e8f0; }
+  .qa-pro:hover { border-color: #fbbf24; box-shadow: 0 12px 24px rgba(251, 191, 36, 0.15); }
+
+  @media (max-width: 480px) {
+    .quick-actions-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
 
   /* ── ACTIVITY FEED ── */
   .activity-item {
@@ -323,7 +361,7 @@
     .bento-card { padding: 1.25rem; border-radius: 20px; grid-column: span 12 !important; }
     .stat-value { font-size: 1.5rem; }
     .stat-icon { width: 44px; height: 44px; font-size: 1.2rem; }
-    .quick-action .qa-icon { font-size: 1.4rem; }
+    .qa-icon-wrapper { width: 40px; height: 40px; font-size: 1.2rem; }
     .hero-quick-stats { border-top: 1px solid rgba(255,255,255,0.15); margin-top: 1.5rem; padding-top: 1rem; }
   }
 </style>
@@ -454,24 +492,30 @@
     {# ── QUICK ACTIONS ── #}
     <div class="bento-card col-4">
       <div class="card-title">⚡ Quick Actions</div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
-        <a href="{{ url_for('crop.crop') }}" class="quick-action">
-          <span class="qa-icon">🌱</span>Crop Intel
+      <div class="quick-actions-grid">
+        <a href="{{ url_for('crop.crop') }}" class="quick-action qa-intel">
+          <div class="qa-icon-wrapper">🌱</div>
+          <span>Crop Intel</span>
         </a>
-        <a href="{{ url_for('pest.pest') }}" class="quick-action">
-          <span class="qa-icon">🩺</span>Diagnose
+        <a href="{{ url_for('pest.pest') }}" class="quick-action qa-diagnose">
+          <div class="qa-icon-wrapper">🩺</div>
+          <span>Diagnose</span>
         </a>
-        <a href="{{ url_for('weather.weather') }}" class="quick-action">
-          <span class="qa-icon">🌤️</span>Climate
+        <a href="{{ url_for('weather.weather') }}" class="quick-action qa-climate">
+          <div class="qa-icon-wrapper">🌤️</div>
+          <span>Climate</span>
         </a>
-        <a href="{{ url_for('expense.expense') }}" class="quick-action">
-          <span class="qa-icon">💰</span>Finance
+        <a href="{{ url_for('expense.expense') }}" class="quick-action qa-finance">
+          <div class="qa-icon-wrapper">💰</div>
+          <span>Finance</span>
         </a>
-        <a href="{{ url_for('chat.chatbot') }}" class="quick-action">
-          <span class="qa-icon">🤖</span>AI Advisor
+        <a href="{{ url_for('chat.chatbot') }}" class="quick-action qa-advisor">
+          <div class="qa-icon-wrapper">🤖</div>
+          <span>AI Advisor</span>
         </a>
-        <a href="{{ url_for('schemes') }}" class="quick-action">
-          <span class="qa-icon">🏛️</span>Schemes
+        <a href="{{ url_for('bio.bio_dashboard') }}" class="quick-action qa-pro">
+          <div class="qa-icon-wrapper">💎</div>
+          <span>PRO Vision</span>
         </a>
       </div>
     </div>

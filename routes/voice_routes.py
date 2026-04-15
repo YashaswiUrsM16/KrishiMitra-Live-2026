@@ -38,8 +38,8 @@ def api_voice_call():
         from ai_utils import call_ai
         import traceback
 
-        location = "India"
-        crops = "farming"
+        location = "[Location Not Set]"
+        crops = "[Crops Not Set]"
         if hasattr(current_user, 'profile') and current_user.profile:
             location = current_user.profile.location_district or location
             crops = current_user.profile.primary_crops or crops
@@ -47,47 +47,65 @@ def api_voice_call():
         latest_prediction = CropHistory.query.filter_by(user_id=current_user.id).order_by(CropHistory.created_at.desc()).first()
         prediction_context = ""
         if latest_prediction:
-            prediction_context = f"The ML engine predicted {latest_prediction.crop_name} as the best crop for this user with an accuracy of {round(latest_prediction.confidence_score, 1)}%. The soil is {latest_prediction.soil_type}. If they ask, make sure to state this accurate prediction and recommend secondary crops to boost profit."
+            prediction_context = f"The ML engine predicted {latest_prediction.crop_name} for this user. Soil: {latest_prediction.soil_type}."
 
         import requests as req_lib
         weather_context = "Weather data unavailable."
         from config import Config
         try:
             api_key = Config.WEATHER_API_KEY
-            url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}&units=metric"
-            r = req_lib.get(url, timeout=2)
-            if r.status_code == 200:
-                d = r.json()
-                weather_context = f"{d['main']['temp']}C, {d['weather'][0]['description']}"
+            if location != "[Location Not Set]":
+                clean_loc = re.sub(r'\(.*?\)', '', location).strip()
+                # 1. Current Weather
+                url = f"http://api.openweathermap.org/data/2.5/weather?q={clean_loc},IN&appid={api_key}&units=metric"
+                r = req_lib.get(url, timeout=2)
+                curr_w = "Unknown"
+                if r.status_code == 200:
+                    d = r.json()
+                    curr_w = f"{d['main']['temp']}C, {d['weather'][0]['description']}"
+                
+                # 2. 3-Day Forecast for proactive advice
+                f_url = f"http://api.openweathermap.org/data/2.5/forecast?q={clean_loc},IN&appid={api_key}&units=metric"
+                fr = req_lib.get(f_url, timeout=2)
+                f_summary = ""
+                if fr.status_code == 200:
+                    fd = fr.json()
+                    # Just grab next few slots to see trends
+                    for item in fd.get('list', [])[:8]: # Next 24 hours
+                        dt = item.get('dt_txt', '').split(' ')[1][:5]
+                        f_summary += f"{dt}:{item['weather'][0]['main']}, "
+                
+                weather_context = f"CURRENT: {curr_w}. FORECAST(24h): {f_summary}"
+            else:
+                weather_context = "Location unknown."
         except: pass
 
-        dialect_instruction = "respond in standard pure Kannada (if using Kannada)."
+        dialect_instruction = "Respond in the SAME language the user uses. If they use Kannada, use standard conversational Kannada."
         loc_lower = location.lower() if location else ""
         if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
-            dialect_instruction = "if using Kannada, use the Mangalore (Kundagannada) dialect with coastal slang."
-        elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur"]):
-            dialect_instruction = "if using Kannada, use the North Karnataka (Jawari) dialect."
-        elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya"]):
-            dialect_instruction = "if using Kannada, use the Old Mysuru/Mandya dialect style."
+            dialect_instruction = "If the user uses Kannada, please use a natural Mangalore/Coastal (Kundagannada) dialect style. If they use English, respond in English."
+        elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur", "bagalkot"]):
+            dialect_instruction = "If the user uses Kannada, use a North Karnataka (Jawari) dialect style."
+        elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya", "chamarajanagar"]):
+            dialect_instruction = "If the user uses Kannada, use an Old Mysuru/Mandya dialect style."
 
-        system_prompt = f"""You are KrishiMitraAI, a Senior Agricultural Expert on a live AUDIO PHONE CALL.
+        system_prompt = f"""You are KrishiMitraAI, a friendly Senior Agricultural Expert on a live AUDIO PHONE CALL.
 Farmer: {current_user.name} | Region: {location} | Crops: {crops}
 LIVE WEATHER: {weather_context}
 {prediction_context}
 
-STRICT PHONE CALL RULES:
-1. Act like a helpful, conversational human expert.
-2. Respond in the SAME language the farmer uses (Kannada or English).
-3. {dialect_instruction}
-4. DO NOT use markdown, asterisks, or bullet points. Speak in clear natural sentences.
-5. Provide elaborated, science-backed farming advice based on {location} and {crops}.
-6. Keep answers reasonably concise (under 6 sentences) but thorough.
-7. Use the weather ({weather_context}) proactively to give advice."""
+PERSONA & LANGUAGE PROTOCOL:
+1. PERSONA: You are "Raitha Mitra" (Farmer's Friend). Be warm and helpful.
+2. WEATHER AWARENESS (PROACTIVE): Use the weather data ({weather_context}). If you see "Rain" in the forecast, WARN the farmer immediately to avoid spraying pesticides or applying urea. If it's "Clear", suggest it's a good day for harvesting or drying.
+3. FLEXIBILITY: If location is missing, ask for it. If they mention it once, remember it from the history.
+4. TECHNICAL BUT SIMPLE: Provide technical tips (pH, NPK, pests) but explain them like a friend.
+5. NO MARKDOWN: No asterisks (*) or hashes (#). Max 5 sentences.
+"""
 
         messages = [{"role": "system", "content": system_prompt}]
         
-        # Cross-platform persistent memory: load ONLY last 3 entries to stay under token limits
-        recent_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp.desc()).limit(3).all()
+        # Cross-platform persistent memory: load last 10 entries for much better conversation memory
+        recent_chats = ChatHistory.query.filter_by(user_id=current_user.id).order_by(ChatHistory.timestamp.desc()).limit(10).all()
         recent_chats.reverse()
         for chat in recent_chats:
             if chat.message:  # Skip any remaining null entries
@@ -97,10 +115,17 @@ STRICT PHONE CALL RULES:
 
         reply_text = call_ai(
             messages=messages,
-            model="llama-3.1-8b-instant",  # Faster for voice
-            max_tokens=1500,
-            temperature=0.5
+            model="llama-3.3-70b-versatile",  # More intelligent, avoids repetition
+            max_tokens=800,
+            temperature=0.7 # Higher variety to avoid loops
         )
+
+        # Post-process for Voice (Sanitize markdown/artifacts that AI might still include)
+        if reply_text:
+            import re
+            reply_text = re.sub(r'[*_#`\[\]]', '', reply_text) # Remove common markdown
+            reply_text = re.sub(r'\(.*?\)', '', reply_text)    # Remove parentheticals like (Smiling)
+            reply_text = reply_text.replace('\n', ' ').strip()
 
         # Update persistent history for omnichannel continuity - ONLY if response is valid
         if reply_text and "trouble connecting" not in reply_text and "AI_LINK_FAILURE" not in reply_text:
@@ -200,18 +225,7 @@ def voice_respond():
             if latest_prediction:
                 prediction_context = f"The ML engine predicted {latest_prediction.crop_name} for this user. Accuracy: {round(latest_prediction.confidence_score, 1)}%."
 
-        dialect_instruction = "respond in standard pure Kannada."
-        loc_lower = location.lower() if location else ""
-        if any(c in loc_lower for c in ["mangalore", "mangaluru", "dakshina kannada", "udupi"]):
-            dialect_instruction = "respond ONLY in Mangalore Kannada dialect (Kundagannada/Coastal Kannada style), using coastal slang and intonation."
-        elif any(c in loc_lower for c in ["uttara kannada", "karwar", "sirsi", "kumta"]):
-            dialect_instruction = "respond ONLY using Uttara Kannada dialect (Havyaka/Kumta Kannada style) with local slang."
-        elif any(c in loc_lower for c in ["hubli", "hubballi", "dharwad", "belagavi", "bijapur"]):
-            dialect_instruction = "respond ONLY using North Karnataka Kannada (Jawari/Hubballi dialect) slang."
-        elif any(c in loc_lower for c in ["mysore", "mysuru", "mandya"]):
-            dialect_instruction = "respond ONLY using old Mysuru/Mandya dialect Kannada."
-
-        system_prompt = f"You are KrishiMitraAI on a REAL PHONE CALL with farmer {user.name if user else 'User'}. Region: {location}. Crops: {crops}. {prediction_context}. Speak naturally, NO markdown. If they speak in Kannada or if the region is in Karnataka, {dialect_instruction}"
+        system_prompt = f"You are KrishiMitraAI on a REAL PHONE CALL with farmer {user.name if user else 'User'}. Region: {location}. Crops: {crops}. {prediction_context}. INSTRUCTIONS: Speak naturally in 3-4 distinct conversational sentences. provide SPECIFIC agricultural details. NEVER repeat the same phrase multiple times. NO markdown. {dialect_instruction}"
         
         messages = [{"role": "system", "content": system_prompt}]
         
@@ -224,7 +238,14 @@ def voice_respond():
         
         messages.append({"role": "user", "content": speech_result})
         
-        reply_text = call_ai(messages=messages, model="llama-3.1-8b-instant")
+        reply_text = call_ai(messages=messages, model="llama-3.3-70b-versatile", max_tokens=1000, temperature=0.7)
+
+        # Sanitize for Voice
+        if reply_text:
+            import re
+            reply_text = re.sub(r'[*_#`\[\]]', '', reply_text)
+            reply_text = re.sub(r'\(.*?\)', '', reply_text)
+            reply_text = reply_text.replace('\n', ' ').strip()
         
         # Save history if valid
         if user and reply_text and "I'm having trouble connecting" not in reply_text:
@@ -247,7 +268,8 @@ def voice_respond():
             speech_hints = "togo, barri, aithri, henge, khare, beku, krishi, raitha, bele"
 
         gather = Gather(input='speech', action='/voice/respond', language=lang, speechTimeout='auto', hints=speech_hints)
-        gather.say(reply_text, language=lang)
+        # Use Polly Aditi for Indian accented English/Hindi/Kannada if available, otherwise high-quality default
+        gather.say(reply_text, voice='Polly.Aditi', language=lang)
         resp.append(gather)
         resp.redirect('/voice/incoming')
 

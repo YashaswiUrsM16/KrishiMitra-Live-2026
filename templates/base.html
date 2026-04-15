@@ -432,6 +432,16 @@
       <span class="icon">💡</span> Farming Tips
     </a>
 
+    <div id="admin-section" style="display: none;">
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-section">Administration</div>
+        <a href="{{ url_for('admin.database_explorer') }}" id="admin-db-link"
+           class="sidebar-item {% if request.endpoint == 'admin.database_explorer' %}active{% endif %}"
+           style="background: rgba(230, 57, 70, 0.05); color: #e63946;">
+          <span class="icon">🔑</span> Database Explorer
+        </a>
+    </div>
+
     <div class="sidebar-divider"></div>
     <!-- User Info Bottom -->
     <div style="padding:10px 12px;margin-top:auto;">
@@ -538,6 +548,30 @@
     }
   });
   {% endif %}
+
+  // JUDGE MODE: Secret keyboard shortcut to access database (Alt + Shift + D)
+  document.addEventListener('keydown', (e) => {
+    if (e.altKey && e.shiftKey && e.code === 'KeyD') {
+      const dbLink = document.getElementById('admin-db-link');
+      if (dbLink) {
+        dbLink.parentElement.style.display = (dbLink.parentElement.style.display === 'none') ? 'block' : 'none';
+        localStorage.setItem('judgeMode', dbLink.parentElement.style.display);
+      } else {
+        window.location.href = "{{ url_for('admin.database_explorer') }}";
+      }
+    }
+  });
+
+  // Check if judge mode was previously enabled
+  document.addEventListener('DOMContentLoaded', () => {
+    const mode = localStorage.getItem('judgeMode');
+    const dbSection = document.getElementById('admin-section');
+    if (mode === 'block' && dbSection) {
+      dbSection.style.display = 'block';
+      const dbLink = document.getElementById('admin-db-link');
+      if (dbLink) dbLink.style.display = 'flex';
+    }
+  });
 </script>
 {% block extra_js %}{% endblock %}
 </body>

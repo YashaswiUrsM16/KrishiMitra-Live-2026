@@ -124,7 +124,49 @@ class FarmEvent(db.Model):
     event_date = db.Column(db.String(50))                         # Human readable date or ISO
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Helper to automatically create basic roles
+# ----------------- MODULE 10: KNOWLEDGE BASE -----------------
+
+class AgriculturalKnowledge(db.Model):
+    __tablename__ = 'agri_knowledge'
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50))                           # e.g. "Soil Suitability", "Pest Control"
+    content = db.Column(db.Text, nullable=False)                  # Detailed fact for AI to read
+    icon = db.Column(db.String(10))                               # UI Icon
+    soil_type = db.Column(db.String(50))                          # Optional metadata
+    crop_name = db.Column(db.String(50))                          # Optional metadata
+    source = db.Column(db.String(255))                             # Where the data came from
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# ----------------- MODULE 11: MARKET & WELFARE -----------------
+
+class MarketPrice(db.Model):
+    __tablename__ = 'market_prices'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    icon = db.Column(db.String(10))
+    price = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String(20), default='quintal')
+    change = db.Column(db.Float, default=0.0)
+    category = db.Column(db.String(50))                           # grain, vegetable, fruit, pulse, spice
+    state = db.Column(db.String(50))
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class GovtScheme(db.Model):
+    __tablename__ = 'govt_schemes'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False)
+    icon = db.Column(db.String(10))
+    category = db.Column(db.String(50))                           # income, insurance, loan, equipment, irrigation
+    amount = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    eligibility = db.Column(db.Text)
+    documents = db.Column(db.Text)
+    tags = db.Column(db.String(255))                              # Comma-separated
+    link = db.Column(db.String(255))
+    status = db.Column(db.String(20), default='Active')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Helper to automatically create basic roles and data
 def initialize_roles():
     if not Role.query.first():
         db.session.add(Role(name='Farmer', description='End user farmer account'))

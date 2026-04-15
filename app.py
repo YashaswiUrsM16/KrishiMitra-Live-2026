@@ -28,7 +28,9 @@ from routes.alerts_routes import alerts_bp
 from routes.sms_routes import sms_bp
 from routes.organic_routes import organic_bp
 
-from database import initialize_roles
+from routes.bio_routes import bio_bp
+from routes.admin_routes import admin_bp
+from database import initialize_roles, MarketPrice, GovtScheme
 
 app = Flask(__name__, static_url_path='/static')
 app.config.from_object(Config)
@@ -48,6 +50,42 @@ def load_user(user_id):
 with app.app_context():
     db.create_all()
     initialize_roles()
+
+    # Seed Market and Schemes if empty
+    if not MarketPrice.query.first():
+        prices = [
+            MarketPrice(name='Wheat', icon='🌾', price=2150, unit='quintal', change=50, category='grain', state='Punjab'),
+            MarketPrice(name='Rice / Paddy', icon='🍚', price=3200, unit='quintal', change=-30, category='grain', state='Maharashtra'),
+            MarketPrice(name='Maize / Corn', icon='🌽', price=1850, unit='quintal', change=20, category='grain', state='Uttar Pradesh'),
+            MarketPrice(name='Tomato', icon='🍅', price=25, unit='kg', change=-5, category='vegetable', state='Maharashtra'),
+            MarketPrice(name='Onion', icon='🧅', price=22, unit='kg', change=8, category='vegetable', state='Maharashtra'),
+            MarketPrice(name='Potato', icon='🥔', price=18, unit='kg', change=3, category='vegetable', state='Uttar Pradesh'),
+            MarketPrice(name='Banana', icon='🍌', price=30, unit='dozen', change=-5, category='fruit', state='Karnataka'),
+            MarketPrice(name='Mango', icon='🥭', price=80, unit='kg', change=15, category='fruit', state='Maharashtra'),
+        ]
+        db.session.add_all(prices)
+        db.session.commit()
+
+    if not GovtScheme.query.first():
+        schemes = [
+            GovtScheme(name='PM Kisan Samman Nidhi', icon='🌾', category='income', amount='₹6,000 / year', description='Small & marginal farmers get ₹2,000 in 3 installments directly.', eligibility='Any farmer owning up to 2 hectares', documents='Aadhaar, Bank Passbook', tags='Central, Direct Benefit', link='https://pmkisan.gov.in'),
+            GovtScheme(name='PM Fasal Bima Yojana', icon='🛡️', category='insurance', amount='Up to 90% coverage', description='Insurance for crop losses due to natural calamities.', eligibility='All farmers', documents='Aadhaar, Land Record', tags='Insurance, Central', link='https://pmfby.gov.in'),
+            GovtScheme(name='Kisan Credit Card (KCC)', icon='💳', category='loan', amount='Up to ₹3 lakh @ 4%', description='Low-interest agri loan.', eligibility='All farmers', documents='Aadhaar, Land Records', tags='Low Interest, Bank', link='https://www.nabard.org'),
+        ]
+        db.session.add_all(schemes)
+        db.session.commit()
+
+    from database import AgriculturalKnowledge
+    if not AgriculturalKnowledge.query.first():
+        tips = [
+            AgriculturalKnowledge(category='general', content='Get your soil tested every 2-3 years — Soil Health Card is FREE!', icon='🌍', soil_type='All', crop_name='General'),
+            AgriculturalKnowledge(category='general', content='Practice crop rotation — never grow the same crop repeatedly.', icon='🔄', soil_type='All', crop_name='General'),
+            AgriculturalKnowledge(category='kharif', content='Treat seeds with Rhizobium before sowing — builds resistance.', icon='🌱', soil_type='Loamy', crop_name='Legumes'),
+            AgriculturalKnowledge(category='rabi', content='First wheat irrigation at CRI stage — 20-25 days after sowing.', icon='🌿', soil_type='Clayey', crop_name='Wheat'),
+            AgriculturalKnowledge(category='water', content='Install drip irrigation — saves 50-70% water and increases yield.', icon='💧', soil_type='Sandy', crop_name='Vegetables'),
+        ]
+        db.session.add_all(tips)
+        db.session.commit()
     
 app.register_blueprint(auth_bp)
 app.register_blueprint(dashboard_bp)
@@ -66,6 +104,8 @@ app.register_blueprint(simulator_bp)
 app.register_blueprint(alerts_bp)
 app.register_blueprint(sms_bp)
 app.register_blueprint(organic_bp)
+app.register_blueprint(bio_bp)
+app.register_blueprint(admin_bp)
 
 
 # ─── LOAD ML MODEL ──────────────────────────────────
@@ -94,19 +134,29 @@ def index():
 @app.route('/market')
 @login_required
 def market():
-    return render_template('market.html', user=current_user)
+    prices = MarketPrice.query.all()
+    return render_template('market.html', user=current_user, prices=prices)
 
 # ─── SCHEMES ────────────────────────────────────────
 @app.route('/schemes')
 @login_required
 def schemes():
-    return render_template('schemes.html', user=current_user)
+    schemes = GovtScheme.query.all()
+    return render_template('schemes.html', user=current_user, schemes=schemes)
 
 # ─── TIPS ───────────────────────────────────────────
 @app.route('/tips')
 @login_required
 def tips():
-    return render_template('tips.html', user=current_user)
+    from database import AgriculturalKnowledge
+    all_tips = AgriculturalKnowledge.query.all()
+    # Group by category for the template
+    grouped_tips = {}
+    for t in all_tips:
+        if t.category not in grouped_tips:
+            grouped_tips[t.category] = []
+        grouped_tips[t.category].append({'tip': t.content, 'icon': t.icon})
+    return render_template('tips.html', user=current_user, grouped_tips=grouped_tips)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7860, debug=True)

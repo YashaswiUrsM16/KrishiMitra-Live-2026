@@ -5,6 +5,11 @@ import sys
 from groq import Groq
 
 from config import Config
+from database import db, AgriculturalKnowledge
+try:
+    from knowledge_base import AgriVectorStore
+except ImportError:
+    AgriVectorStore = None
 
 def safe_print(msg):
     """Print that won't crash on Windows CP1252 consoles with Unicode."""
@@ -15,6 +20,26 @@ def safe_print(msg):
 
 def get_groq_client():
     return Groq(api_key=Config.GROQ_API_KEY)
+
+def get_relevant_context(query):
+    """Retrieves relevant agricultural facts using Hugging Face embeddings."""
+    if AgriVectorStore is None:
+        return ""
+        
+    try:
+        from app import app # Needed for DB context
+        with app.app_context():
+            store = AgriVectorStore()
+            fact_ids = store.search(query)
+            if not fact_ids:
+                return ""
+                
+            facts = AgriculturalKnowledge.query.filter(AgriculturalKnowledge.id.in_(fact_ids)).all()
+            context = "\n".join([f"- {f.content}" for f in facts])
+            return f"\nRELEVANT AGRICULTURAL FACTS:\n{context}\n"
+    except Exception as e:
+        print(f"Retrieval error: {e}")
+        return ""
 
 def call_ai(messages, model="llama-3.1-8b-instant", max_tokens=1800, temperature=0.5):
     """
@@ -42,16 +67,36 @@ def call_ai(messages, model="llama-3.1-8b-instant", max_tokens=1800, temperature
     if not clean_messages:
         clean_messages = [{"role": "user", "content": "Hello"}]
 
+    # --- PROFESSIONAL RAG: Inject Knowledge Base Context ---
+    last_user_query = ""
+    for m in reversed(clean_messages):
+        if m['role'] == 'user':
+            last_user_query = m['content']
+            break
+            
+    if last_user_query:
+        context = get_relevant_context(last_user_query)
+        if context:
+            # Inject into system prompt or as a new message
+            system_injected = False
+            for m in clean_messages:
+                if m['role'] == 'system':
+                    m['content'] += f"\nUse these verified facts if relevant: {context}"
+                    system_injected = True
+                    break
+            if not system_injected:
+                clean_messages.insert(0, {"role": "system", "content": f"You are an expert agricultural assistant. Use these verified facts if relevant: {context}"})
+
     _safe_print(f"DEBUG: call_ai called, {len(clean_messages)} messages, model={model}")
 
     # --- Try Groq first (Gemini free-tier quota is exhausted) ---
-    # Prioritize Llama 3.3 70B for better quality, fallback to others
+    # Prioritize Llama 3.1 8B for speed and availability (70B often hits rate limits)
+    # --- Define Groq models and ensure requested model is tried FIRST ---
     groq_models = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant", "llama-3.2-3b-preview", "mixtral-8x7b-32768"]
-    
-    # If caller wants a specific model, try it first
-    if model and model not in groq_models:
-        if "llama" in model.lower() or "mixtral" in model.lower():
-            groq_models.insert(0, model)
+    if model:
+        if model in groq_models:
+            groq_models.remove(model)
+        groq_models.insert(0, model)
 
     # --- Trim messages to fit within free-tier token limits ---
     # Keep system prompt + more history for better relevance

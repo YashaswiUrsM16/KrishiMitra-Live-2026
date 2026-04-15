@@ -374,42 +374,17 @@
 {% block extra_js %}
 <script>
 const marketData = [
-  { name:'Wheat',         icon:'🌾', price:2150,  unit:'quintal', change:+50,  category:'grain',     state:'Punjab' },
-  { name:'Rice / Paddy',  icon:'🍚', price:3200,  unit:'quintal', change:-30,  category:'grain',     state:'Maharashtra' },
-  { name:'Maize / Corn',  icon:'🌽', price:1850,  unit:'quintal', change:+20,  category:'grain',     state:'Uttar Pradesh' },
-  { name:'Barley',        icon:'🌿', price:1650,  unit:'quintal', change:0,    category:'grain',     state:'Rajasthan' },
-  { name:'Pearl Millet',  icon:'🌾', price:2100,  unit:'quintal', change:+80,  category:'grain',     state:'Gujarat' },
-  { name:'Jowar / Sorghum',icon:'🌾',price:2800,  unit:'quintal', change:-20,  category:'grain',     state:'Maharashtra' },
-  { name:'Cotton',        icon:'🌸', price:6800,  unit:'quintal', change:-100, category:'grain',     state:'Maharashtra' },
-  { name:'Sugarcane',     icon:'🎋', price:350,   unit:'quintal', change:+10,  category:'grain',     state:'Uttar Pradesh' },
-  { name:'Tomato',        icon:'🍅', price:25,    unit:'kg',      change:-5,   category:'vegetable', state:'Maharashtra' },
-  { name:'Potato',        icon:'🥔', price:18,    unit:'kg',      change:+3,   category:'vegetable', state:'Uttar Pradesh' },
-  { name:'Onion',         icon:'🧅', price:22,    unit:'kg',      change:+8,   category:'vegetable', state:'Maharashtra' },
-  { name:'Cauliflower',   icon:'🥦', price:30,    unit:'kg',      change:-10,  category:'vegetable', state:'Punjab' },
-  { name:'Cabbage',       icon:'🥬', price:15,    unit:'kg',      change:+2,   category:'vegetable', state:'Karnataka' },
-  { name:'Brinjal',       icon:'🍆', price:20,    unit:'kg',      change:0,    category:'vegetable', state:'Madhya Pradesh' },
-  { name:'Okra / Bhindi', icon:'🌿', price:35,    unit:'kg',      change:+5,   category:'vegetable', state:'Gujarat' },
-  { name:'Spinach',       icon:'🥬', price:20,    unit:'kg',      change:-3,   category:'vegetable', state:'Punjab' },
-  { name:'Bitter Gourd',  icon:'🌿', price:40,    unit:'kg',      change:+10,  category:'vegetable', state:'Maharashtra' },
-  { name:'Green Peas',    icon:'🫛', price:45,    unit:'kg',      change:-8,   category:'vegetable', state:'Uttar Pradesh' },
-  { name:'Mango',         icon:'🥭', price:80,    unit:'kg',      change:+15,  category:'fruit',     state:'Maharashtra' },
-  { name:'Banana',        icon:'🍌', price:30,    unit:'dozen',   change:-5,   category:'fruit',     state:'Karnataka' },
-  { name:'Apple',         icon:'🍎', price:120,   unit:'kg',      change:+20,  category:'fruit',     state:'Punjab' },
-  { name:'Grapes',        icon:'🍇', price:65,    unit:'kg',      change:-10,  category:'fruit',     state:'Maharashtra' },
-  { name:'Watermelon',    icon:'🍉', price:15,    unit:'kg',      change:+5,   category:'fruit',     state:'Rajasthan' },
-  { name:'Pomegranate',   icon:'🍎', price:90,    unit:'kg',      change:+30,  category:'fruit',     state:'Maharashtra' },
-  { name:'Chickpea',      icon:'🫘', price:5200,  unit:'quintal', change:+100, category:'pulse',     state:'Madhya Pradesh' },
-  { name:'Red Lentil',    icon:'🫘', price:6800,  unit:'quintal', change:-50,  category:'pulse',     state:'Uttar Pradesh' },
-  { name:'Moong Dal',     icon:'🫘', price:7200,  unit:'quintal', change:+200, category:'pulse',     state:'Rajasthan' },
-  { name:'Urad Dal',      icon:'🫘', price:6500,  unit:'quintal', change:-100, category:'pulse',     state:'Madhya Pradesh' },
-  { name:'Soybean',       icon:'🫘', price:4200,  unit:'quintal', change:+80,  category:'pulse',     state:'Maharashtra' },
-  { name:'Turmeric',      icon:'🌿', price:8500,  unit:'quintal', change:+500, category:'spice',     state:'Maharashtra' },
-  { name:'Red Chilli',    icon:'🌶️', price:9000,  unit:'quintal', change:-200, category:'spice',     state:'Andhra Pradesh' },
-  { name:'Garlic',        icon:'🧄', price:120,   unit:'kg',      change:+25,  category:'spice',     state:'Madhya Pradesh' },
-  { name:'Ginger',        icon:'🫚', price:85,    unit:'kg',      change:-10,  category:'spice',     state:'Kerala' },
-  { name:'Coriander Seed',icon:'🌿', price:7500,  unit:'quintal', change:+300, category:'spice',     state:'Rajasthan' },
-  { name:'Cumin / Jeera', icon:'🌿', price:22000, unit:'quintal', change:+800, category:'spice',     state:'Gujarat' },
-  { name:'Mustard',       icon:'🌼', price:5100,  unit:'quintal', change:+150, category:'spice',     state:'Rajasthan' },
+  {% for p in prices %}
+  { 
+    name: '{{ p.name }}', 
+    icon: '{{ p.icon }}', 
+    price: {{ p.price }}, 
+    unit: '{{ p.unit }}', 
+    change: {{ p.change }}, 
+    category: '{{ p.category }}', 
+    state: '{{ p.state }}' 
+  },
+  {% endfor %}
 ];
 
 let currentCategory = 'all';

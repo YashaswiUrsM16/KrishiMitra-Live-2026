@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KrishiMitra PRO | Bio-Intelligent Command Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bio_premium.css') }}">
+    <!-- CDNs with Fallbacks -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="star-field"></div>
+    
+    <!-- HIGH-TECH LOADING OVERLAY -->
+    <div id="loading-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:#020508; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+        <div style="font-family:'Orbitron'; font-size:2rem; color:var(--primary); text-shadow:0 0 10px var(--primary);">KRISHIMITRA PRO</div>
+        <div style="width:250px; height:2px; background:rgba(255,255,255,0.1); overflow:hidden; border-radius:5px;">
+            <div id="load-bar" style="width:0%; height:100%; background:var(--primary); box-shadow:0 0 15px var(--primary); transition: width 0.1s;"></div>
+        </div>
+        <div id="load-status" style="font-size:0.75rem; color:#fff; opacity:0.6; font-family:'Orbitron';">CONNECTING TO AI CORE...</div>
+    </div>
+
+    <!-- ERROR CONSOLE (Hidden by default) -->
+    <div id="error-log" style="position:fixed; bottom:10px; right:10px; background:rgba(255,0,0,0.1); border:1px solid red; color:red; font-size:0.6rem; padding:10px; border-radius:5px; z-index:10000; display:none; max-width:300px;"></div>
+
+    <div class="dashboard-grid">
+        <!-- TOP NAVIGATION -->
+        <header class="top-nav">
+            <div class="logo-pro">KRISHIMITRA <span style="font-weight: 400; color: #fff;">PRO</span></div>
+            <div class="system-status">
+                <div class="status-item"><i class="fa-solid fa-satellite color-primary"></i> <span class="pulse">SATELLITE: LATCHED</span></div>
+                <div class="status-item"><i class="fa-solid fa-microchip"></i> AI: READY</div>
+                <div class="status-item"><i class="fa-solid fa-bolt"></i> SYNC: 2ms</div>
+            </div>
+            <div class="user-actions">
+                <a href="{{ url_for('dashboard.dashboard') }}" style="color: var(--primary); text-decoration: none; font-family: 'Orbitron'; font-size: 0.7rem; border: 1px solid var(--primary); padding: 8px 15px; border-radius: 5px; transition:0.3s; cursor:pointer;">
+                    <i class="fa-solid fa-arrow-left"></i> EXIT HUD
+                </a>
+            </div>
+        </header>
+
+        <!-- LEFT PANEL: DATA INTAKE -->
+        <aside class="side-panel">
+            <div class="panel-header"><i class="fa-solid fa-database"></i> DATA FUSION OPS</div>
+            
+            <div class="data-group">
+                <label style="font-size: 0.65rem; color: var(--secondary); text-transform: uppercase;">AERIAL BLUEPRINT</label>
+                <div style="border: 1px dashed var(--glass-border); border-radius: 12px; padding: 25px; text-align: center; margin-top: 5px; cursor: pointer;" onclick="document.getElementById('blueprint-in').click()">
+                    <i class="fa-solid fa-cloud-arrow-up fa-2x" style="color: var(--primary);"></i>
+                    <p style="font-size: 0.75rem; margin-top: 10px; opacity: 0.7;">LINK SITE DATA</p>
+                    <input type="file" id="blueprint-in" hidden>
+                </div>
+            </div>
+
+            <div class="data-group">
+                <label style="font-size: 0.65rem; color: var(--secondary); text-transform: uppercase;">FIELD PARAMETERS</label>
+                <input type="text" class="glass-input" id="coords" value="12.9716° N, 77.5946° E" style="margin-top: 5px;">
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <input type="number" class="glass-input" id="acres" value="5.5" placeholder="ACRES" min="0.1" step="0.1">
+                    <button class="btn-cyber" id="sync-btn" style="flex:1;" onclick="triggerSync()">SYNC</button>
+                </div>
+            </div>
+
+            <div class="panel-header" style="margin-top: 25px;"><i class="fa-solid fa-stethoscope"></i> PLANT DOCTOR PRO</div>
+            <div style="display: flex; gap: 5px;">
+                <button class="doc-tab active" data-part="leaf" onclick="setPart(this, 'leaf')" style="flex:1; background: var(--primary); color: #000; border:none; padding: 8px; border-radius: 8px; font-size: 0.7rem; font-weight: bold; cursor:pointer;">LEAF</button>
+                <button class="doc-tab" data-part="stem" onclick="setPart(this, 'stem')" style="flex:1; background: rgba(255,255,255,0.05); color: #fff; border:none; padding: 8px; border-radius: 8px; font-size: 0.7rem; cursor:pointer;">STEM</button>
+                <button class="doc-tab" data-part="root" onclick="setPart(this, 'root')" style="flex:1; background: rgba(255,255,255,0.05); color: #fff; border:none; padding: 8px; border-radius: 8px; font-size: 0.7rem; cursor:pointer;">ROOT</button>
+            </div>
+            
+            <div class="upload-area" onclick="document.getElementById('doc-in').click()" style="padding:15px; border-radius:12px; border:1px solid var(--glass-border); margin-top:10px; text-align:center; cursor:pointer; position:relative;">
+                <div id="scan-beam" style="position:absolute; top:0; left:0; width:100%; height:2px; background:var(--primary); display:none; box-shadow:0 0 10px var(--primary);"></div>
+                <i class="fa-solid fa-microscope fa-2x" style="color:var(--secondary);"></i>
+                <p style="font-size:0.75rem; margin-top:5px;">START BIOMETRIC SCAN</p>
+                <input type="file" id="doc-in" hidden accept="image/*">
+            </div>
+
+            <div id="doc-report" style="display:none; margin-top:10px;">
+                <div style="background: rgba(0,255,170,0.15); border: 1px solid var(--primary); padding: 12px; border-radius: 10px;">
+                    <div id="diag-title" style="font-size: 0.9rem; font-weight: 900; color: var(--primary);">DIAGNOSIS...</div>
+                    <div id="diag-severity" style="font-size: 0.7rem; opacity: 0.8; margin-top:3px;">--</div>
+                    <hr style="border:0; border-top: 1px solid rgba(255,255,255,0.1); margin:8px 0;">
+                    <div id="diag-treat" style="font-size: 0.75rem; line-height: 1.3;">--</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER PANEL: 3D DIGITAL TWIN -->
+        <main class="center-content">
+            <div id="three-canvas"></div>
+            
+            <div class="hud-overlay">
+                <div class="hud-card" id="hud-status" style="font-weight:bold;">SYSTEM READY</div>
+                <div class="hud-card" style="border-left-color: var(--secondary);"><i class="fa-solid fa-droplet"></i> HYDRO: <span id="val-hydro">42%</span></div>
+                <div class="hud-card" style="border-left-color: var(--accent);"><i class="fa-solid fa-flask"></i> NPK: <span id="val-npk">OPTIMAL</span></div>
+            </div>
+
+            <div style="position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px;">
+                <button class="layer-btn active" onclick="switchLayer('topo', this)"><i class="fa-solid fa-mountain"></i> TOPO</button>
+                <button class="layer-btn" onclick="switchLayer('bio', this)"><i class="fa-solid fa-leaf"></i> BIO</button>
+                <button class="layer-btn" onclick="switchLayer('hydro', this)"><i class="fa-solid fa-water"></i> WATER</button>
+            </div>
+        </main>
+
+        <!-- RIGHT PANEL: PREDICTIONS -->
+        <aside class="side-panel">
+            <div class="panel-header"><i class="fa-solid fa-brain"></i> YIELD PROGNOSIS</div>
+            
+            <div class="case-card best">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size:0.75rem; font-weight:700;">MAX REVENUE</span>
+                    <span style="color:var(--primary);">₹ <span id="best-val">0</span></span>
+                </div>
+            </div>
+            <div class="case-card avg">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size:0.75rem; font-weight:700;">EXPECTED AVG</span>
+                    <span style="color:var(--secondary);">₹ <span id="avg-val">0</span></span>
+                </div>
+            </div>
+            <div class="case-card worst">
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size:0.75rem; font-weight:700;">LOWEST RISK</span>
+                    <span style="color:var(--danger);">₹ <span id="worst-val">0</span></span>
+                </div>
+            </div>
+
+            <div class="panel-header" style="margin-top: 20px;"><i class="fa-solid fa-chart-line"></i> MANDI TRENDS</div>
+            <div style="height: 160px; position:relative;">
+                <canvas id="mandiChart"></canvas>
+            </div>
+
+            <div style="margin-top: auto; background: rgba(0,0,0,0.5); border:1px solid var(--glass-border); border-radius:12px; padding:12px;">
+                <div style="display:flex; align-items:center; gap:8px; color:var(--accent);">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span style="font-size:0.65rem; font-family:'Orbitron';">IMD ALERT</span>
+                </div>
+                <p style="font-size:0.7rem; margin-top:5px; line-height:1.4;">Unexpected frost risk in zone G12. Apply thermal mulching tonight.</p>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // --- ERROR TRAPPING ---
+        window.onerror = function(msg, url, line) {
+            const errLog = document.getElementById('error-log');
+            errLog.style.display = 'block';
+            errLog.innerText = `ERR: ${msg} (Line ${line})`;
+            return false;
+        };
+
+        // --- GLOBAL STATE ---
+        let scene, camera, renderer, farmMesh, wireMesh;
+        let currentPart = 'leaf';
+        let charts = {};
+
+        // --- BOOT SEQUENCE ---
+        (function boot() {
+            let progress = 0;
+            const bar = document.getElementById('load-bar');
+            const status = document.getElementById('load-status');
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if(progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(dismissLoading, 500);
+                }
+                bar.style.width = progress + '%';
+                if(progress > 30) status.innerText = "LINKING BHUVAN SATELLITE...";
+                if(progress > 60) status.innerText = "LOADING 3D TERRAIN...";
+            }, 100);
+        })();
+
+        function dismissLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            if(window.gsap) {
+                gsap.to(overlay, { 
+                    opacity: 0, 
+                    duration: 0.8, 
+                    onComplete: () => overlay.style.display='none' 
+                });
+            } else {
+                overlay.style.display = 'none';
+            }
+            init3D();
+            initCharts();
+        }
+
+        // --- THREE.JS ENGINE ---
+        function init3D() {
+            try {
+                const container = document.getElementById('three-canvas');
+                if(!container) return;
+
+                scene = new THREE.Scene();
+                camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+                renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                renderer.setSize(container.clientWidth, container.clientHeight);
+                container.appendChild(renderer.domElement);
+
+                // Terrain
+                const geo = new THREE.PlaneGeometry(22, 22, 60, 60);
+                const pos = geo.attributes.position;
+                for(let i=0; i<pos.count; i++) {
+                    const x = pos.getX(i);
+                    const y = pos.getY(i);
+                    pos.setZ(i, Math.sin(x*0.5) * Math.cos(y*0.5) * 1.5);
+                }
+                geo.computeVertexNormals();
+
+                const mat = new THREE.MeshPhongMaterial({ color: 0x1a2e25, transparent:true, opacity:0.95 });
+                farmMesh = new THREE.Mesh(geo, mat);
+                farmMesh.rotation.x = -Math.PI / 2;
+                scene.add(farmMesh);
+
+                const wMat = new THREE.MeshBasicMaterial({ color: 0x00ffa3, wireframe: true, transparent:true, opacity:0.2 });
+                wireMesh = new THREE.Mesh(geo, wMat);
+                wireMesh.rotation.x = -Math.PI / 2;
+                wireMesh.position.y = 0.02;
+                scene.add(wireMesh);
+
+                scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+                const pl = new THREE.PointLight(0x00ffa3, 0.8);
+                pl.position.set(10, 20, 10);
+                scene.add(pl);
+
+                camera.position.set(0, 12, 16);
+                camera.lookAt(0, 0, 0);
+
+                function renderLoop() {
+                    requestAnimationFrame(renderLoop);
+                    farmMesh.rotation.z += 0.0005;
+                    wireMesh.rotation.z += 0.0005;
+                    renderer.render(scene, camera);
+                }
+                renderLoop();
+            } catch(e) { console.error("THREE ERR", e); }
+        }
+
+        function switchLayer(layer, btn) {
+            document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const colors = { topo: 0x1a2e25, bio: 0x2e1a1a, hydro: 0x1a252e };
+            const wireColors = { topo: 0x00ffa3, bio: 0xffaa00, hydro: 0x00aaff };
+            
+            if(window.gsap) {
+                gsap.to(farmMesh.material.color, { ...new THREE.Color(colors[layer]), duration: 0.8 });
+                gsap.to(wireMesh.material.color, { ...new THREE.Color(wireColors[layer]), duration: 0.8 });
+            } else {
+                farmMesh.material.color.setHex(colors[layer]);
+                wireMesh.material.color.setHex(wireColors[layer]);
+            }
+        }
+
+        // --- DASHBOARD ACTIONS ---
+        function setPart(btn, part) {
+            document.querySelectorAll('.doc-tab').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'rgba(255,255,255,0.05)';
+                b.style.color = '#fff';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'var(--primary)';
+            btn.style.color = '#000';
+        }
+        
+        async function triggerSync() {
+            const btn = document.getElementById('sync-btn');
+            const acres = parseFloat(document.getElementById('acres').value) || 1;
+            btn.innerText = "SYNCING...";
+            btn.disabled = true;
+
+            try {
+                const r = await fetch('/api/farm/sync_intelligence', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({size: acres})
+                });
+                const d = await r.json();
+                
+                document.getElementById('hud-status').innerText = "SYNC SUCCESS";
+                document.getElementById('hud-status').style.color = "var(--primary)";
+
+                // Yield Update from API Scenarios
+                animateVal('best-val', d.scenarios.best);
+                animateVal('avg-val', d.scenarios.average);
+                animateVal('worst-val', d.scenarios.worst);
+
+                // Morph 3D
+                gsap.to(farmMesh.scale, { y: 1.2, duration: 0.3, yoyo:true, repeat:1 });
+
+                btn.innerText = "DONE";
+                setTimeout(() => { btn.innerText = "SYNC"; btn.disabled = false; }, 2000);
+            } catch(e) {
+                btn.innerText = "ERROR";
+                btn.disabled = false;
+            }
+        }
+
+        function animateVal(id, target) {
+            const el = document.getElementById(id);
+            if(window.gsap) {
+                const obj = { n: parseFloat(el.innerText.replace(/,/g, '')) || 0 };
+                gsap.to(obj, {
+                    n: target, duration: 1.5,
+                    onUpdate: () => el.innerText = Math.round(obj.n).toLocaleString()
+                });
+            } else { el.innerText = Math.round(target).toLocaleString(); }
+        }
+
+        // PLANT DOCTOR
+        const docIn = document.getElementById('doc-in');
+        docIn.onchange = async (e) => {
+            const file = e.target.files[0];
+            if(!file) return;
+
+            const beam = document.getElementById('scan-beam');
+            const report = document.getElementById('doc-report');
+            const title = document.getElementById('diag-title');
+            
+            beam.style.display = 'block';
+            report.style.display = 'block';
+            title.innerText = "SCANNING TISSUE...";
+            
+            if(window.gsap) gsap.fromTo(beam, {top:'0%'}, {top:'100%', duration:1, repeat:2, yoyo:true});
+
+            const formData = new FormData();
+            formData.append('image', file);
+            formData.append('crop_type', `PRO Scan: ${currentPart.toUpperCase()}`);
+
+            try {
+                const resp = await fetch('/api/detect_pest', { method: 'POST', body: formData });
+                const data = await resp.json();
+                
+                beam.style.display = 'none';
+                title.innerText = data.disease_name || "UNKNOWN PATHOGEN";
+                document.getElementById('diag-severity').innerText = `SEVERITY: ${(data.severity || 'UNKNOWN').toUpperCase()}`;
+                
+                const treatment = (data.treatment_timeline && data.treatment_timeline[0]) 
+                    ? data.treatment_timeline[0].action 
+                    : "No immediate chemical intervention required. Monitor hydration.";
+                document.getElementById('diag-treat').innerText = treatment;
+            } catch(e) {
+                title.innerText = "SCAN FAILED";
+            }
+        };
+
+        // CHARTS
+        async function initCharts() {
+            if(!window.Chart) return;
+            const ctx = document.getElementById('mandiChart').getContext('2d');
+            
+            try {
+                const resp = await fetch('/api/market/trending');
+                const trends = await resp.json();
+                const crop = trends[0];
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['0', '4h', '8h', '12h', '16h', '20h'],
+                        datasets: [{
+                            label: `${crop.name} Price (₹)`,
+                            data: [crop.price-120, crop.price-40, crop.price+10, crop.price, crop.price+50, crop.price+30],
+                            borderColor: '#00ffa3',
+                            backgroundColor: 'rgba(0, 255, 163, 0.1)',
+                            fill: true, tension: 0.4, borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { 
+                            y: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                            x: { ticks: { color: '#94a3b8', font: {size: 10} }, grid: { display: false } }
+                        }
+                    }
+                });
+            } catch(e) { console.error("Chart Error", e); }
+        }
+
+        window.onresize = () => {
+            if(!renderer) return;
+            const container = document.getElementById('three-canvas');
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        };
+    </script>
+</body>
+</html>
